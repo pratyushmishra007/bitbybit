@@ -13,9 +13,13 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check role from session or database
     let userRole = (session.user as any).role;
-    if (!userRole && session?.user?.id) {
+    if (!userRole && session.user.id) {
       const { data: userData } = await supabase
         .from("users")
         .select("role")
@@ -24,7 +28,7 @@ export async function GET(req: NextRequest) {
       userRole = userData?.role;
     }
 
-    if (!session?.user || userRole !== "admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -60,9 +64,13 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check role from session or database
     let userRole = (session.user as any).role;
-    if (!userRole && session?.user?.id) {
+    if (!userRole && session.user.id) {
       const { data: userData } = await supabase
         .from("users")
         .select("role")
@@ -71,7 +79,7 @@ export async function POST(req: NextRequest) {
       userRole = userData?.role;
     }
 
-    if (!session?.user || userRole !== "admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -118,9 +126,13 @@ export async function DELETE(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check role from session or database
     let userRole = (session.user as any).role;
-    if (!userRole && session?.user?.id) {
+    if (!userRole && session.user.id) {
       const { data: userData } = await supabase
         .from("users")
         .select("role")
@@ -129,7 +141,7 @@ export async function DELETE(req: NextRequest) {
       userRole = userData?.role;
     }
 
-    if (!session?.user || userRole !== "admin") {
+    if (userRole !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
