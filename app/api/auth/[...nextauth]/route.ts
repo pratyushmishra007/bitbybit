@@ -4,6 +4,16 @@ import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { supabase } from "@/lib/supabase";
 
+// Get the correct URL for the current environment
+const getUrl = () => {
+  // For production on Vercel, use VERCEL_URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Fallback to NEXTAUTH_URL or localhost
+  return process.env.NEXTAUTH_URL || "http://localhost:3000";
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -160,6 +170,8 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt" as const,
   },
+  // Use dynamic URL based on environment
+  url: getUrl(),
 };
 
 const handler = NextAuth(authOptions);
