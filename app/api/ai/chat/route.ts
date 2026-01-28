@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { AzureOpenAI } from "openai";
 
 // Rate limiting store (in production, use Redis)
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
+// Lazy initialization of Azure OpenAI client
+function getOpenAIClient() {
+  if (!process.env.AZURE_OPENAI_API_KEY || !process.env.AZURE_OPENAI_ENDPOINT) {
+    throw new Error("Missing Azure OpenAI credentials. Please set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT environment variables.");
+  }
+  
+  return new AzureOpenAI({
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || "2024-12-01-preview",
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { message, conversationHistory, codeContext, userEmail } = await req.json();
+    
+    // Get OpenAI client (lazy initialization)
+    const openai = getOpenAIClient();
 
     // Rate limiting (10 queries per hour per user)
     const now = Date.now();

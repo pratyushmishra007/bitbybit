@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { AzureOpenAI } from "openai";
 
-// Support both Azure OpenAI and regular OpenAI
-const openai = process.env.AZURE_OPENAI_ENDPOINT
-  ? new OpenAI({
-      apiKey: process.env.AZURE_OPENAI_API_KEY,
-      baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_NAME}`,
-      defaultQuery: { "api-version": process.env.AZURE_OPENAI_API_VERSION },
-      defaultHeaders: { "api-key": process.env.AZURE_OPENAI_API_KEY },
-    })
-  : new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+// Lazy initialization of Azure OpenAI client
+function getOpenAIClient() {
+  if (!process.env.AZURE_OPENAI_API_KEY || !process.env.AZURE_OPENAI_ENDPOINT) {
+    throw new Error("Missing Azure OpenAI credentials");
+  }
+  
+  return new AzureOpenAI({
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || "2024-12-01-preview",
+  });
+}
 
 // Knowledge base about the application
 const APPLICATION_CONTEXT = `
@@ -92,6 +93,7 @@ Remember: You're here to help users navigate and use the platform, NOT to teach 
 
 export async function POST(req: NextRequest) {
   try {
+    const openai = getOpenAIClient();
     const { message, conversationHistory, userEmail } = await req.json();
 
     const messages = [

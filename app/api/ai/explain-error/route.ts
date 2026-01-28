@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { AzureOpenAI } from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization of Azure OpenAI client
+function getOpenAIClient() {
+  if (!process.env.AZURE_OPENAI_API_KEY || !process.env.AZURE_OPENAI_ENDPOINT) {
+    throw new Error("Missing Azure OpenAI credentials");
+  }
+  
+  return new AzureOpenAI({
+    apiKey: process.env.AZURE_OPENAI_API_KEY,
+    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || "2024-12-01-preview",
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const openai = getOpenAIClient();
     const { code, error, language } = await req.json();
 
     const prompt = `You are a helpful coding tutor. A student wrote this ${language} code and got an error.

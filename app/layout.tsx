@@ -2,7 +2,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import AppAssistant from "./components/AppAssistant";
 import AuthProvider from "./components/AuthProvider";
 import RobotButton from "./components/RobotButton";
@@ -69,7 +69,9 @@ export default function RootLayout({
             )}
 
             {/* Analytics Tracking */}
-            <Analytics />
+            <Suspense fallback={null}>
+              <Analytics />
+            </Suspense>
             <GoogleAnalytics />
           </AuthProvider>
         </ErrorBoundary>
