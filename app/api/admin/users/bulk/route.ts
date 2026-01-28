@@ -14,8 +14,25 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Check role from session OR fetch from database
+    let userRole = (session.user as any).role;
+    
+    if (!userRole && session.user.email) {
+      const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("email", session.user.email)
+        .single();
+      
+      userRole = userData?.role;
+    }
+
+    if (userRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
     const formData = await req.formData();
