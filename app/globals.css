@@ -19,8 +19,315 @@
   }
 }
 
+/* Light mode overrides - Complete theme switching */
+.light {
+  color-scheme: light;
+}
+
+/* Force light mode backgrounds */
+.light,
+.light body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Override all dark mode classes when in light mode */
+.light .dark\:bg-gray-900,
+.light .dark\:from-gray-900,
+.light .dark\:bg-gray-800,
+.light .dark\:to-gray-800 {
+  background-color: transparent !important;
+}
+
+.light .dark\:text-white,
+.light .dark\:text-gray-300,
+.light .dark\:text-gray-400 {
+  color: inherit !important;
+}
+
+.light .dark\:bg-blue-900\/30 {
+  background-color: #dbeafe !important;
+}
+
+.light .dark\:text-blue-300 {
+  color: #2563eb !important;
+}
+
+.light .dark\:hover\:bg-gray-700 {
+  background-color: #f9fafb !important;
+}
+
+.light .dark\:border-gray-600,
+.light .dark\:border-gray-700 {
+  border-color: #e5e7eb !important;
+}
+
+/* Light mode utility classes for custom components */
+.light .bg-black {
+  background-color: #ffffff !important;
+}
+
+.light .bg-zinc-950\/50 {
+  background-color: #f9fafb !important;
+}
+
+.light .bg-zinc-900 {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+.light .bg-zinc-800 {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+.light .bg-zinc-700 {
+  background-color: #e5e7eb !important;
+}
+
+.light .text-white {
+  color: #111827 !important;
+}
+
+.light .text-zinc-100 {
+  color: #374151 !important;
+}
+
+.light .text-zinc-300 {
+  color: #6b7280 !important;
+}
+
+.light .text-zinc-400 {
+  color: #9ca3af !important;
+}
+
+.light .text-zinc-500 {
+  color: #6b7280 !important;
+}
+
+.light .border-zinc-800 {
+  border-color: #e5e7eb !important;
+}
+
+.light .border-zinc-700 {
+  border-color: #d1d5db !important;
+}
+
+/* Navbar in light mode */
+.light nav {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e5e7eb !important;
+}
+
+.light nav .bg-white {
+  background-color: #111827 !important;
+}
+
+.light nav .text-black {
+  color: #ffffff !important;
+}
+
+.light nav .text-white {
+  color: #111827 !important;
+}
+
+.light nav .text-zinc-300,
+.light nav .text-zinc-400 {
+  color: #6b7280 !important;
+}
+
+.light nav .text-zinc-300:hover,
+.light nav .text-zinc-400:hover {
+  color: #111827 !important;
+}
+
+.light nav .bg-zinc-800 {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+/* Cards and containers */
+.light .dark\:bg-gray-800 {
+  background-color: #ffffff !important;
+}
+
+/* Input fields in light mode */
+.light input,
+.light textarea,
+.light select {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Buttons with bg-white in light mode should be dark */
+.light button.bg-white,
+.light a.bg-white {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+}
+
+.light button.bg-white:hover,
+.light a.bg-white:hover {
+  background-color: #1f2937 !important;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Performance-optimized animations using GPU-accelerated properties */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out forwards;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
+.animation-delay-700 {
+  animation-delay: 0.7s;
+}
+
+/* Smooth transitions for better performance */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
