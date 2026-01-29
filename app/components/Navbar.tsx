@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -78,11 +79,13 @@ export default function Navbar() {
                   Dashboard
                 </Link>
                 <div className="flex items-center gap-6">
+                  {/* Notification Bell for Teachers */}
+                  <NotificationBell />
                   <span className="text-gray-900 dark:text-white font-medium">
                     {session.user?.name}
                   </span>
                   <button
-                    onClick={() => signOut()}
+                    onClick={() => signOut({ callbackUrl: '/', redirect: true })}
                     className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
                   >
                     Sign Out
@@ -191,7 +194,7 @@ export default function Navbar() {
                       Dashboard
                     </Link>
                     <button
-                      onClick={() => signOut()}
+                      onClick={() => signOut({ callbackUrl: '/', redirect: true })}
                       className="px-4 py-2 text-center text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
                     >
                       Sign Out

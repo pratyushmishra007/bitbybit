@@ -86,6 +86,11 @@ export default function LessonPage({ params }: PageParams) {
     "💡 Check the console for any error messages"
   ]);
   const [solution, setSolution] = useState<string>("// Solution example\nconsole.log('Hello, World!');");
+  
+  // Raise Hand state
+  const [helpRequestId, setHelpRequestId] = useState<string | null>(null);
+  const [helpRequestStatus, setHelpRequestStatus] = useState<string>("");
+  const [raisingHand, setRaisingHand] = useState(false);
 
   // Multi-language syntax highlighting
   const highlightCode = (code: string, language: string = 'javascript') => {
@@ -702,6 +707,111 @@ export default function LessonPage({ params }: PageParams) {
     }, 1200);
   };
 
+  // Raise Hand - Request teacher help
+  const raiseHand = async () => {
+    if (helpRequestId) {
+      setConsoleOutput(["⚠️ You already have a pending help request. Please wait for a teacher."]);
+      return;
+    }
+    
+    setRaisingHand(true);
+    try {
+      const response = await fetch("/api/help-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessonId: lessonId,
+          courseId: lesson?.course_id,
+          codeSnapshot: code,
+          language: lesson?.language || "javascript",
+          message: "I need help with this lesson",
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setHelpRequestId(data.helpRequest.id);
+        setHelpRequestStatus("pending");
+        setConsoleOutput([
+          "🖐️ Hand raised! A teacher will help you soon.",
+          "⏳ Waiting for teacher response...",
+          "",
+          "Your current code has been saved for the teacher to review.",
+        ]);
+        
+        // Start polling for teacher response
+        checkForTeacherResponse(data.helpRequest.id);
+      } else {
+        setConsoleOutput([`❌ ${data.error || "Failed to raise hand"}`]);
+      }
+    } catch (error) {
+      console.error("Error raising hand:", error);
+      setConsoleOutput(["❌ Error requesting help. Please try again."]);
+    } finally {
+      setRaisingHand(false);
+    }
+  };
+
+  // Check if teacher has responded (poll every 3 seconds)
+  const checkForTeacherResponse = (requestId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/help-requests?status=all`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const myRequest = data.helpRequests.find((req: any) => req.id === requestId);
+          
+          if (myRequest && myRequest.status === "accepted" && myRequest.collaboration_session_id) {
+            clearInterval(pollInterval);
+            setHelpRequestStatus("accepted");
+            setConsoleOutput([
+              "✅ A teacher is ready to help you!",
+              "🎓 Redirecting to collaboration session...",
+            ]);
+            
+            // Redirect to collaboration session
+            setTimeout(() => {
+              router.push(`/collaborate/${myRequest.collaboration_session_id}`);
+            }, 2000);
+          } else if (myRequest && myRequest.status === "cancelled") {
+            clearInterval(pollInterval);
+            setHelpRequestId(null);
+            setHelpRequestStatus("");
+            setConsoleOutput(["ℹ️ Help request was cancelled."]);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking for teacher response:", error);
+      }
+    }, 3000);
+
+    // Stop polling after 30 minutes
+    setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 30 * 60 * 1000);
+  };
+
+  // Cancel help request
+  const cancelHelpRequest = async () => {
+    if (!helpRequestId) return;
+    
+    try {
+      const response = await fetch(`/api/help-requests?id=${helpRequestId}`, {
+        method: "DELETE",
+      });
+      
+      if (response.ok) {
+        setHelpRequestId(null);
+        setHelpRequestStatus("");
+        setConsoleOutput(["ℹ️ Help request cancelled."]);
+      }
+    } catch (error) {
+      console.error("Error cancelling help request:", error);
+    }
+  };
+
   if (loading || status === "loading") {
     return (
       <div className="min-h-screen bg-[#1e1e1e] flex items-center justify-center">
@@ -1149,6 +1259,43 @@ export default function LessonPage({ params }: PageParams) {
             </svg>
             Ask AI
           </button>
+          
+          {/* Raise Hand Button */}
+          {!helpRequestId ? (
+            <button
+              onClick={raiseHand}
+              disabled={raisingHand}
+              className="px-4 py-1 rounded bg-yellow-600 hover:bg-yellow-700 transition-colors text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50"
+              title="Need help? Raise your hand to get teacher assistance"
+            >
+              {raisingHand ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Requesting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                  </svg>
+                  🖐️ Raise Hand
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={cancelHelpRequest}
+              className="px-4 py-1 rounded bg-orange-600 hover:bg-orange-700 transition-colors text-white text-xs font-medium flex items-center gap-2 animate-pulse"
+              title="Cancel help request"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              ⏳ Waiting for Teacher
+            </button>
+          )}
           
           <button
             onClick={runCode}

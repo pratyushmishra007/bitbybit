@@ -27,9 +27,7 @@ export async function GET(
       .from("collaboration_sessions")
       .select(`
         *,
-        creator:created_by(id, name, email),
-        class:class_id(id, name, code),
-        assignment:assignment_id(id, title)
+        creator:created_by(id, name, email)
       `)
       .eq("id", sessionId)
       .single();
@@ -38,43 +36,27 @@ export async function GET(
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // Check if user has access to this session
+    // Check if user is a participant in this session
+    const { data: participant } = await supabase
+      .from("session_participants")
+      .select("id, role")
+      .eq("session_id", sessionId)
+      .eq("user_id", session.user.id)
+      .single();
+
+    // Get user role for admin check
     const { data: user } = await supabase
       .from("users")
-      .select("role, class_id")
+      .select("role")
       .eq("id", session.user.id)
       .single();
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Verify access based on role
-    if (user.role === "admin") {
-      // Admin has access to all sessions
-    } else if (user.role === "teacher") {
-      // Teacher must be assigned to the class
-      const { data: assignment } = await supabase
-        .from("teacher_assignments")
-        .select("id")
-        .eq("teacher_id", session.user.id)
-        .eq("class_id", collabSession.class_id)
-        .single();
-
-      if (!assignment) {
-        return NextResponse.json(
-          { error: "You don't have access to this class" },
-          { status: 403 }
-        );
-      }
-    } else if (user.role === "student") {
-      // Student must be enrolled in the class
-      if (user.class_id !== collabSession.class_id) {
-        return NextResponse.json(
-          { error: "You are not enrolled in this class" },
-          { status: 403 }
-        );
-      }
+    // Allow access if user is admin or a participant
+    if (user?.role !== "admin" && !participant) {
+      return NextResponse.json(
+        { error: "You don't have access to this session" },
+        { status: 403 }
+      );
     }
 
     // Fetch participants

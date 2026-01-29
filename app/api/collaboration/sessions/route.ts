@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     if (user.role === "admin") {
       // Admin can see all sessions
     } else if (user.role === "teacher") {
-      // Teacher sees sessions for classes they teach
+      // Teacher sees sessions they created OR sessions for classes they teach
       const { data: teacherClasses } = await supabase
         .from("teacher_assignments")
         .select("class_id")
@@ -55,17 +55,20 @@ export async function GET(req: NextRequest) {
       const classIds = teacherClasses?.map((tc) => tc.class_id) || [];
       
       if (classIds.length > 0) {
-        query = query.in("class_id", classIds);
+        // Show sessions for their classes OR sessions they created
+        query = query.or(`class_id.in.(${classIds.join(",")}),created_by.eq.${session.user.id}`);
       } else {
-        // No classes assigned, return empty
-        return NextResponse.json({ sessions: [] });
+        // Show only sessions they created
+        query = query.eq("created_by", session.user.id);
       }
     } else if (user.role === "student") {
-      // Student sees sessions for their class
-      if (user.class_id) {
+      // Student sees all active public sessions OR sessions for their class
+      // This allows students to discover and request to join sessions
+      if (activeOnly) {
+        // When activeOnly is true, show all active sessions (students can request to join)
+        query = query.eq("is_active", true);
+      } else if (user.class_id) {
         query = query.eq("class_id", user.class_id);
-      } else {
-        return NextResponse.json({ sessions: [] });
       }
     }
 
@@ -88,7 +91,45 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ sessions });
+    // Enhance sessions with participant and join request status
+    const enhancedSessions = await Promise.all(
+      (sessions || []).map(async (sess: any) => {
+        // Check if current user is a participant
+        const { data: participant } = await supabase
+          .from("session_participants")
+          .select("can_edit")
+          .eq("session_id", sess.id)
+          .eq("user_id", session.user.id)
+          .single();
+
+        // Check if current user has a pending join request
+        const { data: pendingRequest } = await supabase
+          .from("session_join_requests")
+          .select("id")
+          .eq("session_id", sess.id)
+          .eq("user_id", session.user.id)
+          .eq("status", "pending")
+          .single();
+
+        // Get online count
+        const { count: onlineCount } = await supabase
+          .from("session_participants")
+          .select("*", { count: "exact", head: true })
+          .eq("session_id", sess.id)
+          .eq("is_online", true);
+
+        return {
+          ...sess,
+          online_participants: onlineCount || 0,
+          total_participants: sess.participants?.[0]?.count || 0,
+          is_participant: !!participant,
+          can_edit: participant?.can_edit || false,
+          has_pending_request: !!pendingRequest,
+        };
+      })
+    );
+
+    return NextResponse.json({ sessions: enhancedSessions });
   } catch (error) {
     console.error("Sessions API error:", error);
     return NextResponse.json(

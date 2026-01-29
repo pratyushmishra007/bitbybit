@@ -32,7 +32,7 @@ export default function CollaborativeEditor({
   isLocked = false,
   onSave,
 }: CollaborativeEditorProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [code, setCode] = useState('// Start coding...\n');
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,6 +41,7 @@ export default function CollaborativeEditor({
   const editorRef = useRef<any>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSyncedCodeRef = useRef<string>('');
+  const hasJoinedRef = useRef(false);
 
   // Fetch initial code from server
   useEffect(() => {
@@ -52,6 +53,10 @@ export default function CollaborativeEditor({
           if (data.code) {
             setCode(data.code);
             lastSyncedCodeRef.current = data.code;
+            // Notify parent component of initial code
+            if (onSave) {
+              onSave(data.code);
+            }
           }
         }
       } catch (error) {
@@ -60,7 +65,7 @@ export default function CollaborativeEditor({
     };
 
     fetchInitialCode();
-  }, [sessionId]);
+  }, [sessionId, onSave]);
 
   // Join session and fetch participants
   useEffect(() => {
@@ -74,44 +79,56 @@ export default function CollaborativeEditor({
 
         if (response.ok) {
           console.log('✅ Joined collaboration session');
-          fetchParticipants();
+          hasJoinedRef.current = true;
         }
       } catch (error) {
         console.error('Error joining session:', error);
       }
     };
 
-    const fetchParticipants = async () => {
-      try {
-        const response = await fetch(`/api/collaboration/sessions/${sessionId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setParticipants(data.participants || []);
-        }
-      } catch (error) {
-        console.error('Error fetching participants:', error);
-      }
-    };
-
     joinSession();
 
-    // Poll for participants and sync code every 2 seconds
+    // Sync code every 10 seconds (reduced from 3), only when tab is visible
     syncIntervalRef.current = setInterval(() => {
-      fetchParticipants();
-      syncCodeWithServer();
-    }, 2000);
+      if (document.visibilityState === 'visible') {
+        syncCodeWithServer();
+      }
+    }, 10000); // Changed to 10 seconds
 
-    // Leave session on unmount
+    // Leave session on unmount or when user signs out
     return () => {
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current);
       }
 
+      if (hasJoinedRef.current) {
+        fetch(`/api/collaboration/sessions/${sessionId}`, {
+          method: 'DELETE',
+        }).catch(console.error);
+        hasJoinedRef.current = false;
+      }
+    };
+  }, [sessionId, session?.user?.id]);
+
+  // Handle session changes (sign out)
+  useEffect(() => {
+    if (status === 'unauthenticated' && hasJoinedRef.current) {
+      console.log('🚪 User signed out - leaving collaboration session');
+      
+      // Clean up interval
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+        syncIntervalRef.current = null;
+      }
+
+      // Leave session
       fetch(`/api/collaboration/sessions/${sessionId}`, {
         method: 'DELETE',
       }).catch(console.error);
-    };
-  }, [sessionId, session?.user?.id]);
+      
+      hasJoinedRef.current = false;
+    }
+  }, [status, sessionId]);
 
   // Sync code with server (poll-based collaboration)
   const syncCodeWithServer = async () => {
@@ -128,6 +145,10 @@ export default function CollaborativeEditor({
           if (currentCode === lastSyncedCodeRef.current) {
             setCode(data.code);
             lastSyncedCodeRef.current = data.code;
+            // Notify parent component of synced code
+            if (onSave) {
+              onSave(data.code);
+            }
           }
         }
       }
@@ -142,6 +163,11 @@ export default function CollaborativeEditor({
     if (!value || isLocked) return;
 
     setCode(value);
+    
+    // Notify parent component of code changes
+    if (onSave) {
+      onSave(value);
+    }
     
     // Debounce server updates
     if (syncIntervalRef.current) {

@@ -1,0 +1,132 @@
+import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../auth/[...nextauth]/route";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Server-Sent Events (SSE) for real-time notifications
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Get user role to determine what they should see
+  const { data: user } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", session.user.id)
+    .single();
+
+  if (!user || (user.role !== "teacher" && user.role !== "admin")) {
+    return new Response("Only teachers can subscribe to notifications", { 
+      status: 403 
+    });
+  }
+
+  // Create readable stream for SSE
+  const encoder = new TextEncoder();
+  let intervalId: NodeJS.Timeout;
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      console.log("🔔 Teacher connected to notification stream:", session.user.id);
+
+      // Send initial connection message
+      const initialData = `data: ${JSON.stringify({ 
+        type: "connected", 
+        message: "Connected to notifications" 
+      })}\n\n`;
+      controller.enqueue(encoder.encode(initialData));
+
+      // Function to check for new help requests
+      const checkForUpdates = async () => {
+        try {
+          let query = supabase
+            .from("help_requests")
+            .select(`
+              *,
+              student:student_id(id, name, email, avatar)
+            `)
+            .eq("status", "pending")
+            .order("created_at", { ascending: true });
+
+          // Teachers and admins see all pending requests
+          const { data: helpRequests, error } = await query;
+
+          if (error) {
+            console.error("Error fetching help requests:", error);
+            return;
+          }
+
+          // Calculate wait times
+          const requestsWithWaitTime = helpRequests?.map((req) => ({
+            ...req,
+            waitTimeSeconds: Math.floor(
+              (Date.now() - new Date(req.created_at).getTime()) / 1000
+            ),
+          })) || [];
+
+          // Send update to client
+          const message = `data: ${JSON.stringify({
+            type: "update",
+            count: requestsWithWaitTime.length,
+            helpRequests: requestsWithWaitTime,
+            timestamp: new Date().toISOString(),
+          })}\n\n`;
+
+          controller.enqueue(encoder.encode(message));
+        } catch (error) {
+          console.error("Error in SSE update:", error);
+        }
+      };
+
+      // Send initial data
+      await checkForUpdates();
+
+      // Poll every 3 seconds for updates
+      intervalId = setInterval(checkForUpdates, 3000);
+
+      // Send heartbeat every 30 seconds to keep connection alive
+      const heartbeatId = setInterval(() => {
+        const heartbeat = `:heartbeat\n\n`;
+        try {
+          controller.enqueue(encoder.encode(heartbeat));
+        } catch (error) {
+          console.error("Heartbeat error:", error);
+          clearInterval(heartbeatId);
+        }
+      }, 30000);
+
+      // Cleanup when connection closes
+      request.signal.addEventListener("abort", () => {
+        console.log("🔕 Teacher disconnected from notification stream:", session.user.id);
+        clearInterval(intervalId);
+        clearInterval(heartbeatId);
+        controller.close();
+      });
+    },
+
+    cancel() {
+      console.log("🔕 Stream cancelled for teacher:", session.user.id);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    },
+  });
+
+  // Return SSE response
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no", // Disable nginx buffering
+    },
+  });
+}

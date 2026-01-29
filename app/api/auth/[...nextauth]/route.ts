@@ -54,14 +54,17 @@ export const authOptions: NextAuthOptions = {
           .single();
 
         if (!existingUser) {
-          // Create new user in Supabase with pending status
+          // Auto-approve all users (Google OAuth and credentials)
+          const accountStatus = 'approved';
+          
+          // Create new user in Supabase
           const { error } = await supabase.from("users").insert({
             id: user.id,
             email: user.email,
             name: user.name || user.email,
             avatar: user.image,
             role: "student", // Default role for all new users
-            account_status: "pending", // Requires approval
+            account_status: accountStatus,
             xp: 0,
             level: 1,
             streak_days: 0,
@@ -71,6 +74,8 @@ export const authOptions: NextAuthOptions = {
           if (error) {
             console.error("Error creating user:", error);
             // Don't fail signin, just log the error
+          } else {
+            console.log(`✅ Created new user: ${user.email} (${accountStatus})`);
           }
         } else if (existingUser.account_status === 'pending') {
           // Block signin for pending accounts awaiting approval
