@@ -132,7 +132,7 @@ export default function CollaborativeEditor({
 
   // Sync code with server (poll-based collaboration)
   const syncCodeWithServer = async () => {
-    if (isSyncing) return;
+    if (isSyncing || isLocked) return;
     
     try {
       setIsSyncing(true);
@@ -140,9 +140,14 @@ export default function CollaborativeEditor({
       if (response.ok) {
         const data = await response.json();
         if (data.code && data.code !== lastSyncedCodeRef.current) {
-          // Only update if code changed on server and we're not actively typing
+          // Only update if:
+          // 1. Code changed on server
+          // 2. User hasn't modified the code since last sync (prevents overwriting while typing)
+          // 3. Editor is not focused (user not actively editing)
           const currentCode = editorRef.current?.getValue() || '';
-          if (currentCode === lastSyncedCodeRef.current) {
+          const editorHasFocus = editorRef.current?.hasTextFocus() || false;
+          
+          if (currentCode === lastSyncedCodeRef.current && !editorHasFocus) {
             setCode(data.code);
             lastSyncedCodeRef.current = data.code;
             // Notify parent component of synced code

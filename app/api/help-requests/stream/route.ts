@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
   // Create readable stream for SSE
   const encoder = new TextEncoder();
   let intervalId: NodeJS.Timeout;
+  let heartbeatId: NodeJS.Timeout;
+  let isClosed = false;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -42,10 +44,19 @@ export async function GET(request: NextRequest) {
         type: "connected", 
         message: "Connected to notifications" 
       })}\n\n`;
-      controller.enqueue(encoder.encode(initialData));
+      
+      try {
+        controller.enqueue(encoder.encode(initialData));
+      } catch (error) {
+        console.error("Error sending initial message:", error);
+        isClosed = true;
+        return;
+      }
 
       // Function to check for new help requests
       const checkForUpdates = async () => {
+        if (isClosed) return;
+        
         try {
           let query = supabase
             .from("help_requests")
@@ -80,7 +91,16 @@ export async function GET(request: NextRequest) {
             timestamp: new Date().toISOString(),
           })}\n\n`;
 
-          controller.enqueue(encoder.encode(message));
+          if (!isClosed) {
+            try {
+              controller.enqueue(encoder.encode(message));
+            } catch (error) {
+              console.error("Error in SSE update:", error);
+              isClosed = true;
+              clearInterval(intervalId);
+              clearInterval(heartbeatId);
+            }
+          }
         } catch (error) {
           console.error("Error in SSE update:", error);
         }
@@ -93,29 +113,45 @@ export async function GET(request: NextRequest) {
       intervalId = setInterval(checkForUpdates, 3000);
 
       // Send heartbeat every 30 seconds to keep connection alive
-      const heartbeatId = setInterval(() => {
+      heartbeatId = setInterval(() => {
+        if (isClosed) {
+          clearInterval(heartbeatId);
+          return;
+        }
+        
         const heartbeat = `:heartbeat\n\n`;
         try {
           controller.enqueue(encoder.encode(heartbeat));
         } catch (error) {
           console.error("Heartbeat error:", error);
+          isClosed = true;
           clearInterval(heartbeatId);
+          clearInterval(intervalId);
         }
       }, 30000);
 
       // Cleanup when connection closes
       request.signal.addEventListener("abort", () => {
         console.log("🔕 Teacher disconnected from notification stream:", session.user.id);
+        isClosed = true;
         clearInterval(intervalId);
         clearInterval(heartbeatId);
-        controller.close();
+        try {
+          controller.close();
+        } catch (error) {
+          // Controller already closed, ignore
+        }
       });
     },
 
     cancel() {
       console.log("🔕 Stream cancelled for teacher:", session.user.id);
+      isClosed = true;
       if (intervalId) {
         clearInterval(intervalId);
+      }
+      if (heartbeatId) {
+        clearInterval(heartbeatId);
       }
     },
   });

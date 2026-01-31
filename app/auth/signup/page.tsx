@@ -43,10 +43,46 @@ export default function SignUpPage() {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [studentId, setStudentId] = useState("");
 
+  // Validation states
+  const [emailError, setEmailError] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | "">("");
+
   const handleSignupTypeSelect = (type: SignupType) => {
     setSignupType(type);
     setStep(2);
     setError("");
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError("");
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const calculatePasswordStrength = (pwd: string) => {
+    if (!pwd) {
+      setPasswordStrength("");
+      return;
+    }
+    
+    let strength = 0;
+    if (pwd.length >= 8) strength++;
+    if (pwd.length >= 12) strength++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++;
+    if (/[0-9]/.test(pwd)) strength++;
+    if (/[^a-zA-Z0-9]/.test(pwd)) strength++;
+
+    if (strength <= 2) setPasswordStrength("weak");
+    else if (strength <= 3) setPasswordStrength("medium");
+    else setPasswordStrength("strong");
   };
 
   const handleBasicInfoSubmit = async (e: React.FormEvent) => {
@@ -55,6 +91,10 @@ export default function SignUpPage() {
 
     if (!name || !email || !password) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (!validateEmail(email)) {
       return;
     }
 
@@ -265,11 +305,20 @@ export default function SignUpPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (e.target.value) validateEmail(e.target.value);
+                }}
+                onBlur={() => email && validateEmail(email)}
+                className={`w-full px-4 py-3 border ${
+                  emailError ? "border-red-300" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                 placeholder="you@example.com"
                 required
               />
+              {emailError && (
+                <p className="mt-1 text-sm text-red-600">{emailError}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -278,12 +327,47 @@ export default function SignUpPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  calculatePasswordStrength(e.target.value);
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
                 minLength={6}
               />
+              
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex gap-2">
+                    <div className={`h-1.5 flex-1 rounded-full transition-colors ${
+                      passwordStrength === "weak" ? "bg-red-500" :
+                      passwordStrength === "medium" ? "bg-yellow-500" :
+                      passwordStrength === "strong" ? "bg-green-500" : "bg-gray-300"
+                    }`} />
+                    <div className={`h-1.5 flex-1 rounded-full transition-colors ${
+                      passwordStrength === "medium" || passwordStrength === "strong" ? 
+                      (passwordStrength === "medium" ? "bg-yellow-500" : "bg-green-500") : "bg-gray-300"
+                    }`} />
+                    <div className={`h-1.5 flex-1 rounded-full transition-colors ${
+                      passwordStrength === "strong" ? "bg-green-500" : "bg-gray-300"
+                    }`} />
+                  </div>
+                  <p className={`text-xs ${
+                    passwordStrength === "weak" ? "text-red-600" :
+                    passwordStrength === "medium" ? "text-yellow-600" :
+                    "text-green-600"
+                  }`}>
+                    Password strength: {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
+                  </p>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>• At least 8 characters</p>
+                    <p>• Mix of uppercase & lowercase</p>
+                    <p>• Include numbers and symbols</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 mt-6">
               <button
@@ -295,8 +379,8 @@ export default function SignUpPage() {
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+                disabled={loading || !!emailError}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {signupType === "individual" ? "Create Account" : "Continue"}
               </button>

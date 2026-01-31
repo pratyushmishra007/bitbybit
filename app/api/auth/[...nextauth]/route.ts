@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user, account, profile, credentials }: any) {
       try {
         // Check if user exists in our database
         const { data: existingUser } = await supabase
@@ -53,43 +53,57 @@ export const authOptions: NextAuthOptions = {
           .eq("email", user.email)
           .single();
 
+        // Determine if this is signup or login based on OAuth provider
+        const isOAuthProvider = account?.provider === 'google' || account?.provider === 'github';
+        
         if (!existingUser) {
-          // Auto-approve all users (Google OAuth and credentials)
-          const accountStatus = 'approved';
-          
-          // Create new user in Supabase
-          const { error } = await supabase.from("users").insert({
-            id: user.id,
-            email: user.email,
-            name: user.name || user.email,
-            avatar: user.image,
-            role: "student", // Default role for all new users
-            account_status: accountStatus,
-            xp: 0,
-            level: 1,
-            streak_days: 0,
-            lessons_completed: 0,
-          });
+          // NEW USER - Only allow if using OAuth from signup page or credentials
+          if (isOAuthProvider) {
+            // For OAuth, always allow signup and create user
+            const accountStatus = 'approved';
+            
+            const { error } = await supabase.from("users").insert({
+              id: user.id,
+              email: user.email,
+              name: user.name || user.email,
+              avatar: user.image,
+              role: "student",
+              account_status: accountStatus,
+              xp: 0,
+              level: 1,
+              streak_days: 0,
+              lessons_completed: 0,
+            });
 
-          if (error) {
-            console.error("Error creating user:", error);
-            // Don't fail signin, just log the error
-          } else {
-            console.log(`✅ Created new user: ${user.email} (${accountStatus})`);
+            if (error) {
+              console.error("Error creating user:", error);
+              return false;
+            }
+            console.log(`✅ Created new user via ${account.provider}: ${user.email}`);
+            return true;
           }
-        } else if (existingUser.account_status === 'pending') {
-          // Block signin for pending accounts awaiting approval
-          console.log(`⏳ Signin blocked for ${user.email}: Account pending approval`);
-          return false;
-        } else if (existingUser.account_status === 'rejected' || existingUser.account_status === 'suspended') {
-          // Block signin for rejected or suspended accounts
-          console.log(`⛔ Signin blocked for ${user.email}: ${existingUser.account_status}`);
-          return false;
+          // Credentials provider handles user creation in authorize function
+          return true;
+        } else {
+          // EXISTING USER - Check account status
+          if (existingUser.account_status === 'pending') {
+            console.log(`⏳ Signin blocked for ${user.email}: Account pending approval`);
+            return '/auth/pending-approval';
+          } else if (existingUser.account_status === 'rejected') {
+            console.log(`⛔ Signin blocked for ${user.email}: Account rejected`);
+            return '/auth/signin?error=AccountRejected';
+          } else if (existingUser.account_status === 'suspended') {
+            console.log(`⛔ Signin blocked for ${user.email}: Account suspended`);
+            return '/auth/signin?error=AccountSuspended';
+          }
+          
+          console.log(`✅ Existing user signed in: ${user.email}`);
+          return true;
         }
       } catch (error) {
         console.error("Error in signIn callback:", error);
+        return false;
       }
-      return true;
     },
     async session({ session, token }: any) {
       if (session?.user) {

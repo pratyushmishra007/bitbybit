@@ -1,52 +1,22 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base styles */
+body {
+  background: white;
+  color: black;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Light mode overrides - Complete theme switching */
-.light {
-  color-scheme: light;
-}
-
-/* Force light mode backgrounds */
-.light,
-.light body {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-/* Override all dark mode classes when in light mode */
-.light .dark\:bg-gray-900,
-.light .dark\:from-gray-900,
-.light .dark\:bg-gray-800,
-.light .dark\:to-gray-800 {
-  background-color: transparent !important;
-}
-
-.light .dark\:text-white,
-.light .dark\:text-gray-300,
-.light .dark\:text-gray-400 {
-  color: inherit !important;
-}
-
-.light .dark\:bg-blue-900\/30 {
-  background-color: #dbeafe !important;
+.dark body {
+  background: linear-gradient(to bottom, #000000, #0a0a0a);
+  color: #ffffff;
 }
 
 .light .dark\:text-blue-300 {
