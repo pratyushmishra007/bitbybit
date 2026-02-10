@@ -75,7 +75,7 @@ export default function AppAssistant({ isOpen, onClose }: AppAssistantProps) {
   return (
     <div className="fixed bottom-4 right-4 w-[450px] h-[650px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Sparkles className="w-6 h-6" />
@@ -127,14 +127,14 @@ export default function AppAssistant({ isOpen, onClose }: AppAssistantProps) {
             }`}
           >
             {message.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
             )}
             <div
               className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                 message.role === "user"
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  ? "bg-linear-to-r from-purple-600 to-pink-600 text-white"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
               }`}
             >
@@ -149,7 +149,7 @@ export default function AppAssistant({ isOpen, onClose }: AppAssistantProps) {
         ))}
         {isLoading && (
           <div className="flex gap-3 justify-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
@@ -175,7 +175,7 @@ export default function AppAssistant({ isOpen, onClose }: AppAssistantProps) {
           <button
             onClick={sendMessage}
             disabled={isLoading || !input.trim()}
-            className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Send className="w-5 h-5" />
           </button>

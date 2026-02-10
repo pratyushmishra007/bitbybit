@@ -66,7 +66,7 @@ export default function PendingApprovalPage() {
 
   if (loading || status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -87,7 +87,7 @@ export default function PendingApprovalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-gray-200">
         {/* Icon */}
         <div className="flex justify-center mb-6">

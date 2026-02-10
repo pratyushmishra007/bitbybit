@@ -93,22 +93,43 @@ export async function POST(request: NextRequest) {
       userId
     });
 
-    // Streak calculation - simplified for now (just increment on first activity)
+    // Streak calculation - check last activity date
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let streakUpdate = {};
     
     if (currentUser) {
-      // User exists, maintain their streak
+      // User exists - check last activity for proper streak logic
       const { data: userData } = await supabase
         .from("users")
-        .select("streak_days")
+        .select("streak_days, last_active")
         .eq("id", userId)
         .single();
       
-      streakUpdate = { streak_days: (userData?.streak_days || 0) + 1 };
+      const currentStreak = userData?.streak_days || 0;
+      const lastActive = userData?.last_active ? new Date(userData.last_active) : null;
+      
+      if (lastActive) {
+        const lastActiveDay = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+        const daysDiff = Math.floor((today.getTime() - lastActiveDay.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === 0) {
+          // Already active today - don't increment
+          streakUpdate = { streak_days: currentStreak };
+        } else if (daysDiff === 1) {
+          // Last activity was yesterday - continue streak!
+          streakUpdate = { streak_days: currentStreak + 1, last_active: now.toISOString() };
+        } else {
+          // Missed days - reset streak to 1
+          streakUpdate = { streak_days: 1, last_active: now.toISOString() };
+        }
+      } else {
+        // No last_active recorded - start fresh
+        streakUpdate = { streak_days: 1, last_active: now.toISOString() };
+      }
     } else {
       // First activity
-      streakUpdate = { streak_days: 1 };
+      streakUpdate = { streak_days: 1, last_active: now.toISOString() };
     }
 
     // Update lesson_progress (insert or update)
@@ -124,6 +145,39 @@ export async function POST(request: NextRequest) {
       }, {
         onConflict: "user_id,lesson_id",
       });
+
+    // Update daily_activity for analytics tracking
+    const today_str = now.toISOString().split("T")[0];
+    const { data: existingActivity } = await supabase
+      .from("daily_activity")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("activity_date", today_str)
+      .single();
+
+    if (existingActivity) {
+      // Update existing daily activity
+      await supabase
+        .from("daily_activity")
+        .update({
+          lessons_completed: (existingActivity.lessons_completed || 0) + 1,
+          xp_earned: (existingActivity.xp_earned || 0) + xpEarned,
+          time_spent_minutes: (existingActivity.time_spent_minutes || 0) + 5, // Estimate 5 min per lesson
+          updated_at: now.toISOString(),
+        })
+        .eq("id", existingActivity.id);
+    } else {
+      // Create new daily activity record
+      await supabase
+        .from("daily_activity")
+        .insert({
+          user_id: userId,
+          activity_date: today_str,
+          lessons_completed: 1,
+          xp_earned: xpEarned,
+          time_spent_minutes: 5,
+        });
+    }
 
     // Update user stats (upsert to handle new users)
     const { error: updateError } = await supabase

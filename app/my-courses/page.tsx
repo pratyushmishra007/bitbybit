@@ -140,7 +140,7 @@ export default function MyCoursesPage() {
           description="Track your enrolled courses and learning progress"
           keywords="my courses, student courses, learning progress"
         />
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-8">
+        <div className="min-h-screen bg-linear-to-b from-blue-50 to-white p-8">
           <LoadingSkeleton />
         </div>
       </>
@@ -193,7 +193,7 @@ export default function MyCoursesPage() {
         description="Track your enrolled courses and learning progress"
         keywords="my courses, student courses, learning progress"
       />
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-7xl mx-auto">
             {/* Header */}

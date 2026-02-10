@@ -222,10 +222,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             Join BitByBit
           </h1>
           <p className="text-gray-600 mt-2">Start your coding journey today</p>
@@ -245,7 +245,7 @@ export default function SignUpPage() {
             </h2>
             <button
               onClick={() => handleSignupTypeSelect("individual")}
-              className="w-full p-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
+              className="w-full p-6 bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
             >
               <div className="text-left">
                 <h3 className="text-lg font-bold mb-2">Individual Learner</h3>
@@ -256,7 +256,7 @@ export default function SignUpPage() {
             </button>
             <button
               onClick={() => handleSignupTypeSelect("institutional")}
-              className="w-full p-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
+              className="w-full p-6 bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
             >
               <div className="text-left">
                 <h3 className="text-lg font-bold mb-2">Student (School/College)</h3>
@@ -267,7 +267,7 @@ export default function SignUpPage() {
             </button>
             <button
               onClick={() => handleSignupTypeSelect("teacher")}
-              className="w-full p-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
+              className="w-full p-6 bg-linear-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg"
             >
               <div className="text-left">
                 <h3 className="text-lg font-bold mb-2">Teacher/Educator</h3>
@@ -380,7 +380,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading || !!emailError}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {signupType === "individual" ? "Create Account" : "Continue"}
               </button>
@@ -421,7 +421,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
               >
                 {loading ? "Verifying..." : "Verify"}
               </button>
@@ -493,7 +493,7 @@ export default function SignUpPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700"
+                    className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700"
                   >
                     Continue
                   </button>
@@ -536,7 +536,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Create Account"}
               </button>

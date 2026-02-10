@@ -14,15 +14,15 @@ export default function RobotButton({ onClick }: { onClick: () => void }) {
       title="Platform Assistant - Get help navigating BitByBit"
     >
       {/* Outer glow ring */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 opacity-75 blur-xl group-hover:blur-2xl transition-all duration-300 animate-pulse" />
+      <div className="absolute inset-0 rounded-full bg-linear-to-r from-violet-600 via-purple-600 to-fuchsia-600 opacity-75 blur-xl group-hover:blur-2xl transition-all duration-300 animate-pulse" />
       
       {/* Main button */}
-      <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-[3px] shadow-2xl transform group-hover:scale-110 transition-all duration-300">
+      <div className="relative w-20 h-20 rounded-full bg-linear-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-[3px] shadow-2xl transform group-hover:scale-110 transition-all duration-300">
         {/* Inner gradient */}
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center relative overflow-hidden">
+        <div className="w-full h-full rounded-full bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center relative overflow-hidden">
           
           {/* Animated gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 via-purple-500/20 to-fuchsia-500/20 animate-spin-slow" />
+          <div className="absolute inset-0 bg-linear-to-br from-violet-500/20 via-purple-500/20 to-fuchsia-500/20 animate-spin-slow" />
           
           {/* Sparkle effect */}
           <div className="absolute inset-0">

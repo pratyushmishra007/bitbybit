@@ -5,13 +5,37 @@ import { useParams } from "next/navigation";
 import Editor from "@monaco-editor/react";
 import { useSession } from "next-auth/react";
 
+interface SharedCodeData {
+  id: string;
+  share_id: string;
+  user_id?: string;
+  code: string;
+  language: string;
+  title?: string;
+  views: number;
+  created_at: string;
+}
+
+interface Discussion {
+  id: string;
+  share_id: string;
+  user_id: string;
+  comment: string;
+  parent_id?: string;
+  created_at: string;
+  user?: {
+    name: string;
+    email: string;
+  };
+}
+
 export default function SharedCodePage() {
   const params = useParams();
   const shareId = params.id as string;
   const { data: session } = useSession();
 
-  const [codeData, setCodeData] = useState<any>(null);
-  const [discussions, setDiscussions] = useState<any[]>([]);
+  const [codeData, setCodeData] = useState<SharedCodeData | null>(null);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -173,7 +197,7 @@ export default function SharedCodePage() {
               )}
 
               {/* Comments List */}
-              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              <div className="space-y-4 max-h-125 overflow-y-auto">
                 {discussions.length === 0 ? (
                   <p className="text-sm text-gray-400 text-center py-8">
                     No comments yet. Be the first to share your thoughts!
@@ -185,12 +209,12 @@ export default function SharedCodePage() {
                       className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-sm font-bold">
-                          {discussion.user_email?.[0]?.toUpperCase() || "?"}
+                        <div className="w-8 h-8 bg-linear-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-sm font-bold">
+                          {discussion.user?.name?.[0]?.toUpperCase() || discussion.user?.email?.[0]?.toUpperCase() || "?"}
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-white">
-                            {discussion.user_email || "Anonymous"}
+                            {discussion.user?.name || discussion.user?.email || "Anonymous"}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {new Date(discussion.created_at).toLocaleString()}

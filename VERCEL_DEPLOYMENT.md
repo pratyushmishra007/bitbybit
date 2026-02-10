@@ -5,25 +5,29 @@
 Add these in your Vercel Dashboard → Settings → Environment Variables:
 
 ### Required Variables
+
+> ⚠️ **SECURITY WARNING**: Never commit actual secrets to version control!
+> Copy these to your Vercel Dashboard and replace with your actual values.
+
 ```
-NEXT_PUBLIC_APP_URL=https://bitbybit-tmga.vercel.app
-NEXTAUTH_URL=https://bitbybit-tmga.vercel.app
-NEXTAUTH_SECRET=ECo3jJsbEG77FD5P3GrZcUV+PIhHiqnZT7JyNAAB+rs=
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+NEXTAUTH_URL=https://your-app.vercel.app
+NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
 
-NEXT_PUBLIC_SUPABASE_URL=https://fykfxlgjpjmgoeekkhgx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5a2Z4bGdqcGptZ29lZWtraGd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTE2MzAsImV4cCI6MjA4NTAyNzYzMH0.A-d43XxTyPXWNHF0rCaWKIdIe4piCTYD118awQSHSHU
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5a2Z4bGdqcGptZ29lZWtraGd4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTQ1MTYzMCwiZXhwIjoyMDg1MDI3NjMwfQ.koqZc0RXZlvG7X_fIOqTgv5IwKezsjdZMBso2E5YLBY
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
 
-AZURE_OPENAI_API_KEY=A7TdhfhO94dPE7YicbsrEVxDV78uIpye8vQQC5I7vKHHMUB0zHqKJQQJ99AKACHYHv6XJ3w3AAABACOGnc4U
-AZURE_OPENAI_ENDPOINT=https://cognitiev.cognitiveservices.azure.com/
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-5.2-chat
+AZURE_OPENAI_API_KEY=<your-azure-openai-api-key>
+AZURE_OPENAI_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
+AZURE_OPENAI_DEPLOYMENT_NAME=<your-deployment-name>
 AZURE_OPENAI_API_VERSION=2024-12-01-preview
 
-GOOGLE_CLIENT_ID=318931468547-qrtnje3vh3k6nlnicp788dmqn3ik24qj.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<your-google-client-id>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
 
-GITHUB_CLIENT_ID=Ov23lipJKFB1v7q43Zgk
-GITHUB_CLIENT_SECRET=f2363055419b7c8ec0177ef4be203e7b48ae3e0c
+GITHUB_CLIENT_ID=<your-github-client-id>
+GITHUB_CLIENT_SECRET=<your-github-client-secret>
 
 ENABLE_AI_FEATURES=true
 ```

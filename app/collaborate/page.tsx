@@ -259,7 +259,7 @@ export default function CollaborationPage() {
       const response = await fetch(`/api/collaboration/join-requests/${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grantEdit }),
+        body: JSON.stringify({ action: 'approve', grantEditAccess: grantEdit }),
       });
 
       if (response.ok) {
@@ -275,7 +275,9 @@ export default function CollaborationPage() {
   const handleRejectRequest = async (sessionId: string, requestId: string) => {
     try {
       const response = await fetch(`/api/collaboration/join-requests/${requestId}`, {
-        method: 'DELETE',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' }),
       });
 
       if (response.ok) {
@@ -300,14 +302,14 @@ export default function CollaborationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

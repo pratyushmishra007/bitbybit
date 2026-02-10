@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { checkRateLimit, RATE_LIMITS, getClientIdentifier } from '@/lib/rate-limiter';
 
 // Piston API endpoint
 const PISTON_API = 'https://emkc.org/api/v2/piston';
@@ -118,6 +119,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting
+    const userId = (session.user as { id?: string })?.id;
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const clientId = getClientIdentifier(userId, ip);
+    
+    const rateLimitResult = checkRateLimit(`code-exec:${clientId}`, RATE_LIMITS.codeExecution);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded. Please wait before making more requests.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+          },
+        }
       );
     }
 

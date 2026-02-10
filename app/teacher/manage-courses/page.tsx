@@ -190,8 +190,9 @@ export default function ManageCoursesPage() {
       } else {
         setMessage({ type: "error", text: data.error || "Failed to assign course" });
       }
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "An error occurred" });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      setMessage({ type: "error", text: errorMessage });
     } finally {
       setSubmitting(false);
     }
@@ -213,8 +214,9 @@ export default function ManageCoursesPage() {
       } else {
         setMessage({ type: "error", text: data.error || "Failed to remove assignment" });
       }
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "An error occurred" });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      setMessage({ type: "error", text: errorMessage });
     }
   };
 
@@ -226,7 +228,7 @@ export default function ManageCoursesPage() {
           description="Assign courses to classes for different semesters"
           keywords="course assignment, teacher dashboard, manage courses"
         />
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-8">
+        <div className="min-h-screen bg-linear-to-b from-blue-50 to-white p-8">
           <LoadingSkeleton />
         </div>
       </>
@@ -240,7 +242,7 @@ export default function ManageCoursesPage() {
         description="Assign courses to classes for different semesters"
         keywords="course assignment, teacher dashboard, manage courses"
       />
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-7xl mx-auto">
             {/* Header */}

@@ -346,7 +346,7 @@ export default function LessonPage({ params }: PageParams) {
     
     // Filter test cases based on mode
     const testCasesToRun = sampleOnly 
-      ? lesson.test_cases.filter((tc: any) => !tc.hidden) 
+      ? lesson.test_cases.filter((tc: TestCase) => !tc.hidden) 
       : lesson.test_cases;
     
     if (testCasesToRun.length === 0) {
@@ -361,7 +361,7 @@ export default function LessonPage({ params }: PageParams) {
         body: JSON.stringify({
           code,
           language: lesson.language || 'javascript',
-          testCases: testCasesToRun.map((tc: any) => ({
+          testCases: testCasesToRun.map((tc: TestCase) => ({
             input: tc.input || '',
             expectedOutput: tc.expectedOutput || '',
           })),
@@ -377,8 +377,15 @@ export default function LessonPage({ params }: PageParams) {
 
       const data = await response.json();
       
+interface ExecutionResult {
+        passed: boolean;
+        input: string;
+        expected: string;
+        actual: string;
+      }
+      
       // Map results back with hidden property
-      const results = data.results.map((result: any, index: number) => ({
+      const results = data.results.map((result: ExecutionResult, index: number) => ({
         id: `test-${index}`,
         passed: result.passed,
         input: result.input,
@@ -390,7 +397,7 @@ export default function LessonPage({ params }: PageParams) {
       setTestResults(results);
       
       // Set output message
-      const passedCount = results.filter((r: any) => r.passed).length;
+      const passedCount = results.filter((r: { passed: boolean }) => r.passed).length;
       const totalCount = results.length;
       
       if (data.allPassed) {
@@ -406,9 +413,10 @@ export default function LessonPage({ params }: PageParams) {
 
       return data.allPassed;
       
-    } catch (error: any) {
-      console.error('Test execution error:', error);
-      setConsoleOutput([`Error: ${error.message || 'Failed to execute test cases'}`]);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to execute test cases';
+      console.error('Test execution error:', err);
+      setConsoleOutput([`Error: ${errorMessage}`]);
       setTestResults([]);
       return false;
     }
@@ -585,8 +593,9 @@ export default function LessonPage({ params }: PageParams) {
           setShowSuccess(true);
         }
       }
-    } catch (error: any) {
-      setConsoleOutput([`❌ Error: ${error.message}`, '', '💡 Check your code for syntax errors and try again.']);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setConsoleOutput([`❌ Error: ${errorMessage}`, '', '💡 Check your code for syntax errors and try again.']);
       setShowSuccess(false);
     }
   };
@@ -1423,7 +1432,7 @@ export default function LessonPage({ params }: PageParams) {
 
       {/* AI Assistant Panel */}
       {showAI && (
-        <div className="absolute bottom-10 right-8 w-96 h-[500px] rounded-lg bg-[#252526] border border-gray-800 shadow-2xl flex flex-col overflow-hidden z-50">
+        <div className="absolute bottom-10 right-8 w-96 h-125 rounded-lg bg-[#252526] border border-gray-800 shadow-2xl flex flex-col overflow-hidden z-50">
           {/* Header */}
           <div className="bg-[#2d2d30] px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1505,7 +1514,7 @@ export default function LessonPage({ params }: PageParams) {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
@@ -1526,7 +1535,7 @@ export default function LessonPage({ params }: PageParams) {
             </div>
 
             {/* Content */}
-            <div className="p-6 bg-[#1e1e1e] overflow-y-auto max-h-[500px] custom-scrollbar">
+            <div className="p-6 bg-[#1e1e1e] overflow-y-auto max-h-125 custom-scrollbar">
               <div className="space-y-6">
                 {/* Code Execution */}
                 <div>
@@ -1611,11 +1620,11 @@ export default function LessonPage({ params }: PageParams) {
 
       {/* Hints Panel */}
       {showHints && (
-        <div className="fixed top-16 right-6 w-96 h-[500px] bg-[#252526] border border-gray-800 rounded-lg shadow-2xl flex flex-col z-50">
+        <div className="fixed top-16 right-6 w-96 h-125 bg-[#252526] border border-gray-800 rounded-lg shadow-2xl flex flex-col z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -1685,7 +1694,7 @@ export default function LessonPage({ params }: PageParams) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -1756,11 +1765,11 @@ export default function LessonPage({ params }: PageParams) {
 
       {/* Notes Panel */}
       {showNotes && (
-        <div className="fixed top-16 right-6 w-96 h-[500px] bg-[#252526] border border-gray-800 rounded-lg shadow-2xl flex flex-col z-50">
+        <div className="fixed top-16 right-6 w-96 h-125 bg-[#252526] border border-gray-800 rounded-lg shadow-2xl flex flex-col z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>

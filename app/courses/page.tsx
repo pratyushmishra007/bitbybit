@@ -21,6 +21,22 @@ interface Course {
   xp_earned?: number;
 }
 
+interface EnrollmentData {
+  id: string;
+  class_course?: {
+    course?: {
+      id: string;
+      title: string;
+      description?: string;
+      difficulty?: "beginner" | "intermediate" | "advanced";
+      category?: string;
+    };
+  };
+  progress_percentage?: number;
+  lessons_completed?: number;
+  total_lessons?: number;
+}
+
 export default function CoursesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -78,7 +94,7 @@ export default function CoursesPage() {
         }
         
         // Transform enrollments to course format
-        const enrolledCourses = (data.enrollments || []).map((e: any) => {
+        const enrolledCourses = (data.enrollments || []).map((e: EnrollmentData) => {
           console.log("🔍 Processing enrollment:", {
             enrollment_id: e.id,
             class_course: e.class_course,

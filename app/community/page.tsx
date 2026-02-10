@@ -85,7 +85,7 @@ export default function CommunityPage() {
           description="Explore and share code with the BitByBit community. Learn from others and showcase your programming solutions."
           keywords="code sharing, programming community, code examples, peer learning"
         />
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-8">
+        <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-8">
           <LoadingSkeleton />
         </div>
       </>
@@ -100,7 +100,7 @@ export default function CommunityPage() {
         keywords="code sharing, programming community, code examples, peer learning"
       />
       
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pt-20 px-4 pb-12">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pt-20 px-4 pb-12">
         {/* Header */}
         <div className="max-w-7xl mx-auto mb-8">
           <div className="text-center mb-8">
@@ -193,7 +193,7 @@ export default function CommunityPage() {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
                           {getInitials(code.user?.name, code.user?.email || "?")}
                         </div>
                         <div>

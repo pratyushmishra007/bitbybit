@@ -41,7 +41,7 @@ export default function Toast({ message, type = "success", duration = 3000, onCl
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       }`}
     >
-      <div className={`bg-gradient-to-r ${colors[type]} rounded-lg shadow-2xl px-6 py-4 flex items-center gap-3 min-w-[300px]`}>
+      <div className={`bg-linear-to-r ${colors[type]} rounded-lg shadow-2xl px-6 py-4 flex items-center gap-3 min-w-[300px]`}>
         <span className="text-2xl">{icons[type]}</span>
         <p className="text-white font-semibold flex-1">{message}</p>
         <button

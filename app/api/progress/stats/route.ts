@@ -52,17 +52,36 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Count total lessons per course (hardcoded for now, can be dynamic later)
-    const courseLessonCounts: Record<string, number> = {
-      "basic-javascript": 4,
-      "javascript": 10,
-      "python": 8,
-      "react": 12,
-    };
-
-    Object.keys(courseProgress).forEach((slug) => {
-      courseProgress[slug].total = courseLessonCounts[slug] || 10;
-    });
+    // Dynamically fetch lesson counts from database for each course
+    const courseIds = Object.keys(courseProgress);
+    if (courseIds.length > 0) {
+      const { data: coursesData } = await supabase
+        .from("courses")
+        .select("id, lessons_count")
+        .in("id", courseIds);
+      
+      if (coursesData) {
+        for (const course of coursesData) {
+          if (courseProgress[course.id]) {
+            courseProgress[course.id].total = course.lessons_count || 0;
+          }
+        }
+      }
+      
+      // Also try to count lessons directly from lessons table for accuracy
+      for (const courseId of courseIds) {
+        if (courseProgress[courseId].total === 0) {
+          const { count } = await supabase
+            .from("lessons")
+            .select("*", { count: "exact", head: true })
+            .eq("course_id", courseId);
+          
+          if (count) {
+            courseProgress[courseId].total = count;
+          }
+        }
+      }
+    }
 
     // Get last accessed lesson
     const { data: lastLesson } = await supabase

@@ -127,13 +127,29 @@ export default function TeacherDashboard() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">Teacher Dashboard</h1>
-          <a
-            href="/teacher/manage-courses"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-white transition-all shadow-lg flex items-center gap-2"
-          >
-            <span className="text-xl">📚</span>
-            Manage Courses
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="/teacher/analytics"
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold text-white transition-all shadow-lg flex items-center gap-2"
+            >
+              <span className="text-xl">📊</span>
+              Analytics
+            </a>
+            <a
+              href="/teacher/assessments"
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold text-white transition-all shadow-lg flex items-center gap-2"
+            >
+              <span className="text-xl">📝</span>
+              Assessments
+            </a>
+            <a
+              href="/teacher/manage-courses"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold text-white transition-all shadow-lg flex items-center gap-2"
+            >
+              <span className="text-xl">📚</span>
+              Manage Courses
+            </a>
+          </div>
         </div>
 
         {/* Stats Cards */}

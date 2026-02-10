@@ -208,7 +208,7 @@ export default function FeaturesPage() {
         keywords="coding platform features, interactive learning, AI hints, code execution, programming challenges"
       />
       
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
         {/* Hero Section */}
         <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
@@ -253,12 +253,12 @@ export default function FeaturesPage() {
                   className="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
                 >
                   {/* Feature Header */}
-                  <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
+                  <div className={`h-2 bg-linear-to-r ${feature.color}`} />
                   
                   <div className="p-6">
                     {/* Icon */}
                     <div className="mb-4">
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
+                      <div className={`w-14 h-14 rounded-xl bg-linear-to-r ${feature.color} flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
                         {feature.icon}
                       </div>
                     </div>
@@ -293,7 +293,7 @@ export default function FeaturesPage() {
 
         {/* CTA Section */}
         <div className="px-4 sm:px-6 lg:px-8 pb-20">
-          <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-12 text-center">
+          <div className="max-w-4xl mx-auto bg-linear-to-r from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-12 text-center">
             <h2 className="text-4xl font-bold text-white mb-4">
               Ready to Start Learning?
             </h2>

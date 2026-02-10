@@ -225,7 +225,7 @@ export default function DemoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-black dark:to-gray-900 transition-colors duration-500">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-black dark:to-gray-900 transition-colors duration-500">
       {/* Theme Toggle Button */}
       <button
         onClick={toggleDarkMode}
@@ -254,7 +254,7 @@ export default function DemoPage() {
           <h1 className="text-3xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-3 leading-tight tracking-tight">
             Experience the Future of
             <br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Coding Education
             </span>
           </h1>
@@ -266,13 +266,13 @@ export default function DemoPage() {
 
           <button
             onClick={startInteractiveDemo}
-            className="group relative px-8 py-3.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white text-sm font-semibold rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 overflow-hidden"
+            className="group relative px-8 py-3.5 bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white text-sm font-semibold rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 overflow-hidden"
           >
             {/* Animated background effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-pink-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             {/* Shimmer effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-linear-to-r from-transparent via-white/30 to-transparent"></div>
             
             <span className="relative flex items-center gap-2.5">
               <span className="relative">
@@ -297,7 +297,7 @@ export default function DemoPage() {
             {/* Top Bar */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">BB</span>
                 </div>
                 <div>
@@ -340,7 +340,7 @@ export default function DemoPage() {
             {isPlaying && (
               <div className="h-1 bg-white/10">
                 <div 
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-100"
+                  className="h-full bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-100"
                   style={{ width: `${autoPlayProgress}%` }}
                 ></div>
               </div>
@@ -472,7 +472,7 @@ export default function DemoPage() {
 
                   {activeStep === 3 && (
                     <div className="max-w-3xl mx-auto">
-                      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 h-[500px] flex flex-col">
+                      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 h-125 flex flex-col">
                         <div className="flex-1 overflow-y-auto space-y-4 mb-4 custom-scrollbar">
                           {chatMessages.map((msg, idx) => (
                             <div
@@ -513,7 +513,7 @@ export default function DemoPage() {
                           </div>
                           <div className="flex -space-x-2">
                             {['👨‍💻', '👩‍💻', '🧑‍💻'].map((emoji, idx) => (
-                              <div key={idx} className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-black text-sm">
+                              <div key={idx} className="w-8 h-8 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-black text-sm">
                                 {emoji}
                               </div>
                             ))}
@@ -549,7 +549,7 @@ export default function DemoPage() {
                           { label: 'Rank', value: '#42', icon: '🏆', color: 'from-purple-500 to-blue-500' }
                         ].map((stat, idx) => (
                           <div key={idx} className="p-5 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 animate-slideUp" style={{ animationDelay: `${idx * 150}ms` }}>
-                            <div className={`text-3xl mb-2 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                            <div className={`text-3xl mb-2 bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
                               {stat.icon}
                             </div>
                             <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
@@ -669,7 +669,7 @@ export default function DemoPage() {
                             <div key={idx} className="p-4 bg-white/5 rounded-xl border border-white/10 hover:border-white/30 transition-all animate-slideIn" style={{ animationDelay: `${idx * 100}ms` }}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                                  <div className="w-10 h-10 bg-linear-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
                                     {request.student[0]}
                                   </div>
                                   <div>
@@ -694,7 +694,7 @@ export default function DemoPage() {
                   {activeStep === 9 && (
                     <div className="max-w-4xl mx-auto">
                       <div className="grid md:grid-cols-2 gap-6">
-                        <div className="p-6 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-xl rounded-2xl border border-yellow-500/30 animate-slideUp">
+                        <div className="p-6 bg-linear-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-xl rounded-2xl border border-yellow-500/30 animate-slideUp">
                           <div className="text-5xl mb-4">🏆</div>
                           <h3 className="text-2xl font-bold text-white mb-2">Course Master</h3>
                           <p className="text-white/70 mb-4">Completed all JavaScript fundamentals</p>
@@ -707,7 +707,7 @@ export default function DemoPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl rounded-2xl border border-purple-500/30 animate-slideUp" style={{ animationDelay: '200ms' }}>
+                        <div className="p-6 bg-linear-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl rounded-2xl border border-purple-500/30 animate-slideUp" style={{ animationDelay: '200ms' }}>
                           <div className="text-5xl mb-4">⚡</div>
                           <h3 className="text-2xl font-bold text-white mb-2">Speed Demon</h3>
                           <p className="text-white/70 mb-4">7 day coding streak achieved!</p>
@@ -826,7 +826,7 @@ export default function DemoPage() {
             </div>
 
             {/* Content Area */}
-            <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+            <div className="p-4 max-h-100 overflow-y-auto custom-scrollbar">
               {activeStep === 0 && (
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
@@ -834,7 +834,7 @@ export default function DemoPage() {
                     { name: "Python for Data Science", level: "Intermediate", lessons: 18, icon: "🐍" },
                     { name: "React & Next.js", level: "Advanced", lessons: 32, icon: "⚛️" }
                   ].map((course, idx) => (
-                    <div key={idx} className="group p-5 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-500 hover:shadow-xl cursor-pointer transform hover:-translate-y-1">
+                    <div key={idx} className="group p-5 bg-linear-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-500 hover:shadow-xl cursor-pointer transform hover:-translate-y-1">
                       <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">{course.icon}</div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{course.name}</h3>
                       <div className="flex items-center gap-2 mb-3">
@@ -887,7 +887,7 @@ export default function DemoPage() {
                         {typedCode || sampleCode}
                       </SyntaxHighlighter>
                     </div>
-                    <button className="mt-3 w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg">
+                    <button className="mt-3 w-full px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg">
                       ▶ Run Code
                     </button>
                   </div>
@@ -920,7 +920,7 @@ export default function DemoPage() {
                             </div>
                           </div>
                         ))}
-                        <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white text-center">
+                        <div className="p-4 bg-linear-to-r from-green-500 to-emerald-500 rounded-xl text-white text-center">
                           <div className="text-xl font-semibold mb-0.5">🎉 All Tests Passed!</div>
                           <div className="text-xs opacity-90">+50 XP Earned</div>
                         </div>
@@ -946,7 +946,7 @@ export default function DemoPage() {
 
               {activeStep === 2 && (
                 <div className="max-w-3xl mx-auto">
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-800">
+                  <div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border-2 border-green-200 dark:border-green-800">
                     <div className="text-center mb-6">
                       <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-4 animate-bounce">
                         <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -981,7 +981,7 @@ export default function DemoPage() {
                             <span className="font-semibold text-gray-900 dark:text-white">Excellent</span>
                           </div>
                           <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" style={{ width: '95%' }}></div>
+                            <div className="h-full bg-linear-to-r from-green-500 to-emerald-500 rounded-full" style={{ width: '95%' }}></div>
                           </div>
                         </div>
                         <div>
@@ -990,7 +990,7 @@ export default function DemoPage() {
                             <span className="font-semibold text-gray-900 dark:text-white">O(n)</span>
                           </div>
                           <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" style={{ width: '90%' }}></div>
+                            <div className="h-full bg-linear-to-r from-blue-500 to-cyan-500 rounded-full" style={{ width: '90%' }}></div>
                           </div>
                         </div>
                       </div>
@@ -1003,8 +1003,8 @@ export default function DemoPage() {
                 <div className="max-w-4xl mx-auto">
                   <div className="grid md:grid-cols-2 gap-8">
                     {/* Chat Interface */}
-                    <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+                    <div className="bg-linear-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-2xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                      <div className="bg-linear-to-r from-blue-600 to-purple-600 p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                             <span className="text-2xl">🤖</span>
@@ -1047,7 +1047,7 @@ export default function DemoPage() {
                             placeholder="Type your question..."
                             className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
-                          <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:shadow-lg transition-shadow">
+                          <button className="px-4 py-2 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-full hover:shadow-lg transition-shadow">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                             </svg>
@@ -1087,7 +1087,7 @@ export default function DemoPage() {
                         }
                       ].map((feature, idx) => (
                         <div key={idx} className="group p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-transparent hover:shadow-xl transition-all duration-300 cursor-pointer">
-                          <div className={`absolute inset-0 bg-gradient-to-r ${feature.color} opacity-0 group-hover:opacity-10 rounded-xl transition-opacity`}></div>
+                          <div className={`absolute inset-0 bg-linear-to-r ${feature.color} opacity-0 group-hover:opacity-10 rounded-xl transition-opacity`}></div>
                           <div className="relative flex items-start gap-4">
                             <div className="text-3xl">{feature.icon}</div>
                             <div className="flex-1">
@@ -1104,7 +1104,7 @@ export default function DemoPage() {
 
               {activeStep === 4 && (
                 <div className="max-w-5xl mx-auto">
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 border-2 border-indigo-200 dark:border-indigo-800">
+                  <div className="bg-linear-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 border-2 border-indigo-200 dark:border-indigo-800">
                     <div className="text-center mb-8">
                       <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Live Collaboration Session</h3>
                       <p className="text-gray-600 dark:text-gray-300">Work together in real-time with synchronized editing</p>
@@ -1200,7 +1200,7 @@ export default function DemoPage() {
                       { label: "Current Level", value: "12", icon: "🏆", color: "from-purple-500 to-pink-500" },
                       { label: "Day Streak", value: "15", icon: "🔥", color: "from-red-500 to-orange-500" }
                     ].map((stat, idx) => (
-                      <div key={idx} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-6 text-white shadow-xl`}>
+                      <div key={idx} className={`bg-linear-to-br ${stat.color} rounded-2xl p-6 text-white shadow-xl`}>
                         <div className="text-4xl mb-2">{stat.icon}</div>
                         <div className="text-3xl font-bold mb-1">{stat.value}</div>
                         <div className="text-sm opacity-90">{stat.label}</div>
@@ -1244,7 +1244,7 @@ export default function DemoPage() {
                         { icon: "🔥", name: "On Fire", desc: "15-day learning streak" },
                         { icon: "🤝", name: "Team Player", desc: "Join 10 collaborations" }
                       ].map((achievement, idx) => (
-                        <div key={idx} className="group p-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all duration-300 cursor-pointer hover:scale-105">
+                        <div key={idx} className="group p-4 bg-linear-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all duration-300 cursor-pointer hover:scale-105">
                           <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">{achievement.icon}</div>
                           <div className="font-bold text-gray-900 dark:text-white text-sm mb-1">{achievement.name}</div>
                           <div className="text-xs text-gray-600 dark:text-gray-400">{achievement.desc}</div>
@@ -1258,7 +1258,7 @@ export default function DemoPage() {
               {activeStep === 6 && (
                 <div className="max-w-6xl mx-auto">
                   {/* Contest Header */}
-                  <div className="bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 rounded-2xl p-8 mb-8 text-white text-center">
+                  <div className="bg-linear-to-r from-red-500 via-pink-500 to-purple-500 rounded-2xl p-8 mb-8 text-white text-center">
                     <div className="text-6xl mb-4">🏆</div>
                     <h3 className="text-3xl font-bold mb-2">Weekly Coding Challenge</h3>
                     <p className="text-lg opacity-90 mb-4">Compete with 1,247 participants worldwide</p>
@@ -1288,7 +1288,7 @@ export default function DemoPage() {
                         ].map((player, idx) => (
                           <div key={idx} className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
                             player.highlight 
-                              ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500 dark:border-green-400' 
+                              ? 'bg-linear-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500 dark:border-green-400' 
                               : 'bg-gray-50 dark:bg-gray-700 hover:shadow-lg'
                           }`}>
                             <div className={`w-12 h-12 ${player.color} rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
@@ -1369,7 +1369,7 @@ export default function DemoPage() {
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-1000"
+                                className="h-full bg-linear-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-1000"
                                 style={{ width: `${(problem.solved / problem.total) * 100}%` }}
                               ></div>
                             </div>
@@ -1452,7 +1452,7 @@ export default function DemoPage() {
                               {/* Content */}
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                  <div className="w-8 h-8 bg-linear-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                     {discussion.avatar}
                                   </div>
                                   <span className="font-semibold text-gray-900 dark:text-white">{discussion.author}</span>
@@ -1547,7 +1547,7 @@ export default function DemoPage() {
                           { name: "Advanced Python", students: 18, active: 8, pending: 1, color: "from-purple-500 to-pink-500" },
                           { name: "Web Development", students: 32, active: 15, pending: 5, color: "from-green-500 to-emerald-500" }
                         ].map((classItem, idx) => (
-                          <div key={idx} className={`bg-gradient-to-r ${classItem.color} rounded-xl p-6 text-white`}>
+                          <div key={idx} className={`bg-linear-to-r ${classItem.color} rounded-xl p-6 text-white`}>
                             <h4 className="font-bold text-xl mb-4">{classItem.name}</h4>
                             <div className="grid grid-cols-3 gap-4">
                               <div className="text-center">
@@ -1609,7 +1609,7 @@ export default function DemoPage() {
                           }`}>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 bg-linear-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
                                   {request.student[0]}
                                 </div>
                                 <div>
@@ -1629,7 +1629,7 @@ export default function DemoPage() {
                             </div>
                             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 italic">"{request.message}"</p>
                             <div className="flex gap-2">
-                              <button className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all">
+                              <button className="flex-1 py-2 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all">
                                 Accept & Join
                               </button>
                               <button className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-all">
@@ -1666,8 +1666,8 @@ export default function DemoPage() {
               {activeStep === 9 && (
                 <div className="max-w-5xl mx-auto">
                   {/* Achievement Showcase */}
-                  <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-3xl p-12 text-center text-white mb-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <div className="bg-linear-to-r from-violet-500 via-purple-500 to-pink-500 rounded-3xl p-12 text-center text-white mb-8 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
                     <div className="relative z-10">
                       <div className="text-8xl mb-4 animate-bounce">🎓</div>
                       <h3 className="text-4xl font-bold mb-2">Course Completion Certificate</h3>
@@ -1697,7 +1697,7 @@ export default function DemoPage() {
                       ].map((badge, idx) => (
                         <div key={idx} className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 ${
                           badge.unlocked
-                            ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:scale-110 cursor-pointer'
+                            ? 'border-yellow-400 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:scale-110 cursor-pointer'
                             : 'border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 opacity-50'
                         }`}>
                           <div className={`text-5xl mb-2 ${badge.unlocked ? 'animate-pulse' : 'grayscale'}`}>
@@ -1722,7 +1722,7 @@ export default function DemoPage() {
                       { course: "Python Basics", date: "Dec 20, 2025", score: 88, gradient: "from-purple-500 to-pink-500" },
                       { course: "Web Development", date: "Nov 10, 2025", score: 92, gradient: "from-green-500 to-emerald-500" }
                     ].map((cert, idx) => (
-                      <div key={idx} className={`bg-gradient-to-br ${cert.gradient} rounded-2xl p-8 text-white relative overflow-hidden`}>
+                      <div key={idx} className={`bg-linear-to-br ${cert.gradient} rounded-2xl p-8 text-white relative overflow-hidden`}>
                         <div className="absolute top-0 right-0 text-white/10 text-9xl font-bold">🎓</div>
                         <div className="relative z-10">
                           <div className="text-sm opacity-90 mb-2">Certificate of Completion</div>
@@ -1803,7 +1803,7 @@ export default function DemoPage() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-10">
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-center shadow-xl">
+        <div className="max-w-4xl mx-auto bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-center shadow-xl">
           <h2 className="text-2xl md:text-3xl font-semibold text-white mb-3">
             Ready to Start Your Journey?
           </h2>

@@ -97,7 +97,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-600 text-lg">Loading admin panel...</p>
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20 px-4 pb-12" suppressHydrationWarning>
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 px-4 pb-12" suppressHydrationWarning>
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
 
               <button
                 onClick={() => router.push("/admin/approvals")}
-                className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-300 hover:border-orange-500 hover:shadow-lg transition-all text-left group relative"
+                className="bg-linear-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-300 hover:border-orange-500 hover:shadow-lg transition-all text-left group relative"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-gray-700 text-sm font-semibold">Pending Approvals</h3>
@@ -221,11 +221,53 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </button>
+
+              <button
+                onClick={() => router.push("/admin/departments")}
+                className="bg-white rounded-xl p-6 border-2 border-teal-200 hover:border-teal-400 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Departments</h3>
+                  <svg className="w-8 h-8 text-teal-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-teal-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">Manage departments</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/academic-years")}
+                className="bg-white rounded-xl p-6 border-2 border-amber-200 hover:border-amber-400 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Academic Years</h3>
+                  <svg className="w-8 h-8 text-amber-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-amber-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">Configure academic years</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/semesters")}
+                className="bg-white rounded-xl p-6 border-2 border-rose-200 hover:border-rose-400 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Semesters</h3>
+                  <svg className="w-8 h-8 text-rose-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-rose-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">Manage semesters</p>
+              </button>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 rounded-xl p-6 border border-blue-500/30">
+              <div className="bg-linear-to-br from-blue-900/50 to-blue-800/50 rounded-xl p-6 border border-blue-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-blue-300 text-sm font-semibold">Total Users</h3>
                   <svg className="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -236,7 +278,7 @@ export default function AdminDashboard() {
                 <p className="text-blue-300 text-xs mt-2">{stats.activeUsers} active today</p>
               </div>
 
-              <div className="bg-gradient-to-br from-green-900/50 to-green-800/50 rounded-xl p-6 border border-green-500/30">
+              <div className="bg-linear-to-br from-green-900/50 to-green-800/50 rounded-xl p-6 border border-green-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-green-300 text-sm font-semibold">Teachers</h3>
                   <svg className="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -247,7 +289,7 @@ export default function AdminDashboard() {
                 <p className="text-green-300 text-xs mt-2">Educators</p>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/50 rounded-xl p-6 border border-purple-500/30">
+              <div className="bg-linear-to-br from-purple-900/50 to-purple-800/50 rounded-xl p-6 border border-purple-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-purple-300 text-sm font-semibold">Students</h3>
                   <svg className="w-8 h-8 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
@@ -258,7 +300,7 @@ export default function AdminDashboard() {
                 <p className="text-purple-300 text-xs mt-2">Learners</p>
               </div>
 
-              <div className="bg-gradient-to-br from-pink-900/50 to-pink-800/50 rounded-xl p-6 border border-pink-500/30">
+              <div className="bg-linear-to-br from-pink-900/50 to-pink-800/50 rounded-xl p-6 border border-pink-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-pink-300 text-sm font-semibold">Shared Code</h3>
                   <svg className="w-8 h-8 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
@@ -306,7 +348,7 @@ export default function AdminDashboard() {
                     <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
                             {user.email.charAt(0).toUpperCase()}
                           </div>
                           <div>

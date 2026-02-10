@@ -18,14 +18,14 @@ export default function IntroButton() {
       >
         <div className="relative">
           {/* Animated rings */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-75 blur-md group-hover:blur-lg animate-pulse"></div>
+          <div className="absolute inset-0 rounded-full bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 opacity-75 blur-md group-hover:blur-lg animate-pulse"></div>
           
           {/* Main button */}
-          <div className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full p-1 shadow-2xl">
+          <div className="relative bg-linear-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full p-1 shadow-2xl">
             <div className="bg-white dark:bg-gray-900 rounded-full px-6 py-4 flex items-center gap-3 group-hover:bg-opacity-95 transition-all">
               <div className="text-2xl animate-wave">👋</div>
               <div className="text-left">
-                <div className="text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <div className="text-sm font-bold bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Hi, I'm Pratyush!
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -52,7 +52,7 @@ export default function IntroButton() {
           {/* Modal Content */}
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 animate-slideUp">
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-6 rounded-t-2xl">
+            <div className="sticky top-0 bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 p-6 rounded-t-2xl">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="text-5xl animate-wave">👋</div>
@@ -80,10 +80,10 @@ export default function IntroButton() {
             {/* Body */}
             <div className="p-8 space-y-6">
               {/* Welcome Message */}
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+              <div className="bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   Coming from my <span className="font-semibold text-blue-600 dark:text-blue-400">resume/portfolio</span>? Check out the{" "}
-                  <a href="/demo" className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text hover:underline">
+                  <a href="/demo" className="font-bold text-transparent bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text hover:underline">
                     Demo Page
                   </a>{" "}
                   to see everything in action! 🎯
@@ -125,7 +125,7 @@ export default function IntroButton() {
               </div>
 
               {/* Security & Approval */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-5 border-2 border-amber-300 dark:border-amber-700">
+              <div className="bg-linear-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-5 border-2 border-amber-300 dark:border-amber-700">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="text-2xl shrink-0">🔒</div>
                   <div>
@@ -139,7 +139,7 @@ export default function IntroButton() {
                 </div>
                 <a
                   href="mailto:pratyushdinesh56@gmail.com?subject=BitByBit%20Access%20Request&body=Hi%20Pratyush%2C%0A%0AI%20would%20like%20to%20request%20access%20to%20the%20BitByBit%20platform.%0A%0AMy%20details%3A%0A-%20Name%3A%20%0A-%20Email%3A%20%0A-%20Role%3A%20%5BIndividual%20Learner%20%2F%20School-College%5D%0A-%20Organization%3A%20BITBYBIT%0A%0AThank%20you!%0A"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all text-sm"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -170,7 +170,7 @@ export default function IntroButton() {
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                className="flex-1 px-6 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 Got It!
               </button>

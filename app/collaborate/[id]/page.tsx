@@ -71,8 +71,36 @@ export default function CollaborateSessionPage() {
 
   const sessionId = params.id as string;
   const isHost = sessionData?.creator?.id === session?.user?.id;
-  const myParticipant = participants.find(p => p.user_id === session?.user?.id);
+  
+  // Find participant by user_id OR by user.id OR by email (handles ID mismatch cases)
+  const myParticipant = participants.find(p => 
+    p.user_id === session?.user?.id || 
+    p.user?.id === session?.user?.id ||
+    p.user?.email === session?.user?.email
+  );
   const canEdit = myParticipant?.can_edit ?? false;
+  
+  // Debug logging for participant matching
+  useEffect(() => {
+    if (session?.user && participants.length > 0) {
+      console.log('🔍 Participant lookup debug:', {
+        sessionUserId: session.user.id,
+        sessionUserEmail: session.user.email,
+        participants: participants.map(p => ({ 
+          user_id: p.user_id, 
+          userId: p.user?.id,
+          email: p.user?.email,
+          can_edit: p.can_edit 
+        })),
+        myParticipant: myParticipant ? { 
+          user_id: myParticipant.user_id, 
+          can_edit: myParticipant.can_edit 
+        } : null,
+        isHost,
+        canEdit: isHost || canEdit
+      });
+    }
+  }, [session?.user, participants, myParticipant, isHost, canEdit]);
 
   // Memoized fetch functions to prevent infinite loops
   const fetchParticipants = useCallback(async () => {
@@ -332,7 +360,7 @@ export default function CollaborateSessionPage() {
 
     setExecuting(true);
     try {
-      const response = await fetch('/api/execute', {
+      const response = await fetch('/api/execute-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -439,7 +467,7 @@ export default function CollaborateSessionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading collaboration session...</p>
@@ -451,7 +479,7 @@ export default function CollaborateSessionPage() {
   // Non-participant UI - show request to join
   if (!isParticipant && sessionData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="text-center max-w-md bg-white p-8 rounded-lg shadow-lg">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -489,7 +517,7 @@ export default function CollaborateSessionPage() {
 
   if (error || !sessionData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="text-center max-w-md">
           <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -509,7 +537,7 @@ export default function CollaborateSessionPage() {
 
   if (!sessionData.is_active) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex items-center justify-center">
         <div className="text-center max-w-md">
           <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -528,7 +556,7 @@ export default function CollaborateSessionPage() {
   }
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="h-screen flex bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Premium Header */}
@@ -538,7 +566,7 @@ export default function CollaborateSessionPage() {
               {/* Left Section - Session Info */}
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                     </svg>
@@ -574,7 +602,7 @@ export default function CollaborateSessionPage() {
                 {isHost && (
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-500/30 flex items-center gap-2"
+                    className="px-4 py-2 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-500/30 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
@@ -600,7 +628,7 @@ export default function CollaborateSessionPage() {
                 <button
                   onClick={handleExecuteCode}
                   disabled={executing}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-semibold rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2"
+                  className="px-4 py-2 bg-linear-to-r from-emerald-600 to-teal-600 text-white text-sm font-semibold rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2"
                 >
                   {executing ? (
                     <>
@@ -634,7 +662,7 @@ export default function CollaborateSessionPage() {
                 {isHost && joinRequests.length > 0 && (
                   <button
                     onClick={() => setShowJoinRequests(!showJoinRequests)}
-                    className="relative px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2"
+                    className="relative px-4 py-2 bg-linear-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
@@ -663,13 +691,13 @@ export default function CollaborateSessionPage() {
 
         {/* Premium Execution Result Panel */}
         {executionResult && (
-          <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border-b border-slate-700/50 shadow-xl">
+          <div className="bg-linear-to-br from-slate-800 via-slate-900 to-slate-800 border-b border-slate-700/50 shadow-xl">
             <div className="px-6 py-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   {executionResult.error ? (
                     <>
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/40">
+                      <div className="w-8 h-8 rounded-lg bg-linear-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/40">
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
@@ -678,7 +706,7 @@ export default function CollaborateSessionPage() {
                     </>
                   ) : (
                     <>
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                      <div className="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/40">
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
@@ -750,7 +778,8 @@ export default function CollaborateSessionPage() {
           <CollaborativeEditor
             sessionId={sessionId}
             language={sessionData?.language || 'javascript'}
-            isLocked={!canEdit}
+            isLocked={sessionData?.is_locked || false}
+            canEdit={isHost || canEdit}
             onSave={handleSave}
           />
         </div>
@@ -758,11 +787,11 @@ export default function CollaborateSessionPage() {
 
       {/* Premium Participants Panel */}
       {showParticipants && (
-        <div className="w-80 bg-gradient-to-br from-slate-50 to-blue-50 border-l border-slate-200 flex flex-col shadow-xl">
+        <div className="w-80 bg-linear-to-br from-slate-50 to-blue-50 border-l border-slate-200 flex flex-col shadow-xl">
           <div className="p-4 border-b border-slate-200/60 bg-white/60 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
                   <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                   </svg>
@@ -788,7 +817,7 @@ export default function CollaborateSessionPage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="relative">
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/30">
+                    <div className="w-11 h-11 bg-linear-to-br from-blue-500 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/30">
                       {participant.user.name?.charAt(0) || '?'}
                     </div>
                     {participant.is_online && (
@@ -801,7 +830,7 @@ export default function CollaborateSessionPage() {
                         {participant.user.name}
                       </span>
                       {participant.role === 'host' && (
-                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold rounded uppercase shadow-sm">
+                        <span className="px-1.5 py-0.5 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold rounded uppercase shadow-sm">
                           Host
                         </span>
                       )}
@@ -830,7 +859,7 @@ export default function CollaborateSessionPage() {
                       <div className="flex gap-1.5 mt-2.5">
                         <button
                           onClick={() => handleTogglePermission(participant.id, participant.can_edit)}
-                          className="flex-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
+                          className="flex-1 px-2.5 py-1.5 text-xs bg-linear-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
                         >
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             {participant.can_edit ? (
@@ -861,11 +890,11 @@ export default function CollaborateSessionPage() {
 
       {/* Premium Join Requests Panel */}
       {showJoinRequests && isHost && (
-        <div className="w-80 bg-gradient-to-br from-orange-50 to-red-50 border-l border-orange-200 flex flex-col shadow-xl">
+        <div className="w-80 bg-linear-to-br from-orange-50 to-red-50 border-l border-orange-200 flex flex-col shadow-xl">
           <div className="p-4 border-b border-orange-200/60 bg-white/60 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-linear-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-md">
                   <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                   </svg>
@@ -885,7 +914,7 @@ export default function CollaborateSessionPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleApproveAll(false)}
-                  className="flex-1 px-3 py-2 text-xs bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-semibold shadow-md shadow-emerald-500/30 flex items-center justify-center gap-1.5"
+                  className="flex-1 px-3 py-2 text-xs bg-linear-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-semibold shadow-md shadow-emerald-500/30 flex items-center justify-center gap-1.5"
                 >
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -895,7 +924,7 @@ export default function CollaborateSessionPage() {
                 </button>
                 <button
                   onClick={() => handleApproveAll(true)}
-                  className="flex-1 px-3 py-2 text-xs bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-md shadow-blue-500/30 flex items-center justify-center gap-1.5"
+                  className="flex-1 px-3 py-2 text-xs bg-linear-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-md shadow-blue-500/30 flex items-center justify-center gap-1.5"
                 >
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -924,7 +953,7 @@ export default function CollaborateSessionPage() {
                   className="bg-white/80 backdrop-blur-sm rounded-xl p-3.5 shadow-md border border-orange-200/50 hover:shadow-lg transition-all"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-orange-500/30">
+                    <div className="w-11 h-11 bg-linear-to-br from-orange-500 to-red-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-lg shadow-orange-500/30">
                       {request.user.name?.charAt(0) || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -940,7 +969,7 @@ export default function CollaborateSessionPage() {
                       <div className="flex gap-1.5 mt-2.5">
                         <button
                           onClick={() => handleApproveRequest(request.id, false)}
-                          className="flex-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
+                          className="flex-1 px-2.5 py-1.5 text-xs bg-linear-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
                         >
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -950,7 +979,7 @@ export default function CollaborateSessionPage() {
                         </button>
                         <button
                           onClick={() => handleApproveRequest(request.id, true)}
-                          className="flex-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
+                          className="flex-1 px-2.5 py-1.5 text-xs bg-linear-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all font-semibold shadow-sm flex items-center justify-center gap-1"
                         >
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -980,7 +1009,7 @@ export default function CollaborateSessionPage() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-br from-violet-500 to-indigo-600 px-6 py-5">
+            <div className="bg-linear-to-br from-violet-500 to-indigo-600 px-6 py-5">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
                   <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -1001,8 +1030,8 @@ export default function CollaborateSessionPage() {
               </p>
               
               {/* Session Link */}
-              <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200 mb-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-2xl"></div>
+              <div className="bg-linear-to-br from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200 mb-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-2xl"></div>
                 <div className="relative">
                   <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Session URL</label>
                   <code className="text-xs text-slate-700 break-all font-mono bg-white px-3 py-2 rounded-lg border border-slate-200 block">
@@ -1037,7 +1066,7 @@ export default function CollaborateSessionPage() {
               <div className="flex gap-2.5">
                 <button
                   onClick={handleInviteStudent}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-500/30 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-500/30 flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />

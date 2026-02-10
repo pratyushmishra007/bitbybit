@@ -79,7 +79,7 @@ export default function AIChatbot({ isOpen, onClose, codeContext }: AIChatbotPro
   return (
     <div className="fixed bottom-4 right-4 w-96 h-[600px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-2xl">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-t-2xl">
         <div className="flex items-center gap-3">
           <Bot className="w-6 h-6" />
           <div>
@@ -105,14 +105,14 @@ export default function AIChatbot({ isOpen, onClose, codeContext }: AIChatbotPro
             }`}
           >
             {message.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
                 <Bot className="w-5 h-5 text-white" />
               </div>
             )}
             <div
               className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                 message.role === "user"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  ? "bg-linear-to-r from-blue-600 to-purple-600 text-white"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
               }`}
             >
@@ -127,7 +127,7 @@ export default function AIChatbot({ isOpen, onClose, codeContext }: AIChatbotPro
         ))}
         {isLoading && (
           <div className="flex gap-3 justify-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
@@ -153,7 +153,7 @@ export default function AIChatbot({ isOpen, onClose, codeContext }: AIChatbotPro
           <button
             onClick={sendMessage}
             disabled={isLoading || !input.trim()}
-            className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Send className="w-5 h-5" />
           </button>

@@ -7,6 +7,12 @@ import Link from "next/link";
 import SEO from "../components/SEO";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 
+interface LastLessonData {
+  course_slug: string;
+  lesson_id: string;
+  updated_at: string;
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -18,7 +24,7 @@ export default function DashboardPage() {
     lessonsCompleted: 0,
   });
   const [courseProgress, setCourseProgress] = useState<Record<string, { completed: number; total: number }>>({});
-  const [lastLesson, setLastLesson] = useState<any>(null);
+  const [lastLesson, setLastLesson] = useState<LastLessonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>("student");
 
@@ -78,7 +84,7 @@ export default function DashboardPage() {
           description="Track your coding progress, view completed lessons, and continue your learning journey with BitByBit."
           keywords="coding dashboard, learning progress, programming tracker"
         />
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-8">
+        <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 p-8">
           <LoadingSkeleton />
         </div>
       </>
@@ -99,7 +105,7 @@ export default function DashboardPage() {
         description="Track your coding progress, view completed lessons, and continue your learning journey with BitByBit."
         keywords="coding dashboard, learning progress, programming tracker"
       />
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pt-20">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 pt-20">
       {/* Header with Role-Based Actions */}
       <div className="container mx-auto px-4 mb-8">
         <div className="max-w-7xl mx-auto">
@@ -183,6 +189,20 @@ export default function DashboardPage() {
                   <div className="text-left">
                     <div className="text-sm opacity-90">Explore</div>
                     <div className="text-base font-black">Courses</div>
+                  </div>
+                </div>
+              </Link>
+              <Link
+                href="/dashboard/analytics"
+                className="group px-6 py-4 bg-linear-to-br from-green-500 to-teal-600 rounded-2xl font-bold text-white transition-all shadow-xl shadow-green-500/50 hover:shadow-2xl hover:shadow-green-500/60 hover:scale-105 hover:-translate-y-1 transform"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-12 transition-transform">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm opacity-90">My</div>
+                    <div className="text-base font-black">Analytics</div>
                   </div>
                 </div>
               </Link>
@@ -427,7 +447,7 @@ export default function DashboardPage() {
           {/* Quick Actions */}
           <div className="mt-10 pt-8 border-t border-gray-200">
             <h3 className="text-2xl font-black text-gray-800 mb-6">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Link
                 href="/community"
                 className="group relative bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-200 hover:border-purple-300 transition-all hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 transform overflow-hidden"
@@ -458,6 +478,23 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600 font-medium mb-3">Test your skills in challenges</p>
                   <span className="text-blue-600 text-sm font-bold group-hover:text-blue-700 inline-flex items-center gap-1">
                     Compete →
+                  </span>
+                </div>
+              </Link>
+
+              <Link
+                href="/my-assessments"
+                className="group relative bg-linear-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-200 hover:border-green-300 transition-all hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transform overflow-hidden"
+              >
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-green-400 to-emerald-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
+                    <span className="text-3xl">📝</span>
+                  </div>
+                  <h4 className="text-xl font-black text-gray-800 mb-2">Assessments</h4>
+                  <p className="text-sm text-gray-600 font-medium mb-3">Take quizzes and exams</p>
+                  <span className="text-green-600 text-sm font-bold group-hover:text-green-700 inline-flex items-center gap-1">
+                    View →
                   </span>
                 </div>
               </Link>

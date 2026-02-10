@@ -155,27 +155,27 @@ export default function UsersPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Users
             </h1>
           </div>
           <button
             onClick={() => setShowBulkModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 shadow-lg"
+            className="px-6 py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 shadow-lg"
           >
             📤 Bulk Import CSV
           </button>
@@ -189,7 +189,7 @@ export default function UsersPage() {
               onClick={() => setFilter(role as any)}
               className={`px-6 py-2 rounded-lg font-medium transition-all ${
                 filter === role
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  ? "bg-linear-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
                   : "bg-white text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -201,7 +201,7 @@ export default function UsersPage() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-indigo-50 to-purple-50">
+              <thead className="bg-linear-to-r from-indigo-50 to-purple-50">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>

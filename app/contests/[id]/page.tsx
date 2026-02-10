@@ -47,6 +47,14 @@ interface LeaderboardEntry {
   problems_solved: number;
 }
 
+interface TestResult {
+  passed: boolean;
+  input: string;
+  expected: string;
+  actual: string;
+  hidden?: boolean;
+}
+
 const LANGUAGES = [
   { id: "javascript", name: "JavaScript", version: "18.15.0" },
   { id: "typescript", name: "TypeScript", version: "5.0.3" },
@@ -74,7 +82,7 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"problems" | "leaderboard">("problems");
   const [loading, setLoading] = useState(true);
-  const [testResults, setTestResults] = useState<any[]>([]);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
 
   useEffect(() => {
     params.then((p) => {
@@ -178,8 +186,9 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
       });
 
       setOutput(outputText);
-    } catch (error: any) {
-      setOutput(`❌ Error: ${error.message}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setOutput(`❌ Error: ${errorMessage}`);
     } finally {
       setIsRunning(false);
     }
@@ -235,8 +244,9 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
       } else {
         setOutput(`❌ Error: ${data.error || "Submission failed"}`);
       }
-    } catch (error: any) {
-      setOutput(`❌ Error: ${error.message || "Submission failed"}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Submission failed';
+      setOutput(`❌ Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -276,7 +286,7 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-gray-900 to-gray-800">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <div className="text-white text-xl">Loading contest...</div>
@@ -287,7 +297,7 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
 
   if (!contest) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-gray-900 to-gray-800">
         <div className="text-center">
           <div className="text-6xl mb-4">🏆</div>
           <h2 className="text-2xl font-bold text-white mb-4">Contest not found</h2>
@@ -303,7 +313,7 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-linear-to-b from-gray-900 to-gray-800">
       {/* Header */}
       <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -377,7 +387,7 @@ export default function ContestDashboard({ params }: { params: Promise<{ id: str
                     onClick={() => setSelectedProblem(problem)}
                     className={`w-full text-left p-4 rounded-lg transition-all ${
                       selectedProblem?.id === problem.id
-                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
+                        ? "bg-linear-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
                         : "bg-gray-800/50 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-700/50"
                     }`}
                   >

@@ -84,7 +84,7 @@ export default function ApprovalsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-600 text-lg">Loading pending approvals...</p>
@@ -94,7 +94,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-20 px-4 pb-12">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 px-4 pb-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -149,7 +149,7 @@ export default function ApprovalsPage() {
                     <tr key={user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
                             {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
                           </div>
                           <div className="ml-4">
