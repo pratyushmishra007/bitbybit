@@ -2,6 +2,13 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the enhanced lesson editor
+const EnhancedLessonEditor = dynamic(
+  () => import('@/app/components/EnhancedLessonEditor'),
+  { ssr: false }
+);
 
 interface Lesson {
   id: string;
@@ -37,10 +44,39 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [saving, setSaving] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [isNewLesson, setIsNewLesson] = useState(false);
+  const [useEnhancedEditor, setUseEnhancedEditor] = useState(true);
+  const [cloning, setCloning] = useState(false);
 
   useEffect(() => {
     fetchCourse();
   }, [resolvedParams.id]);
+
+  const handleCloneCourse = async () => {
+    if (!course) return;
+    
+    const newTitle = prompt('Enter a title for the cloned course:', `${course.title} (Copy)`);
+    if (!newTitle) return;
+    
+    setCloning(true);
+    try {
+      const response = await fetch(`/api/admin/courses/${course.id}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newTitle, includeAssessments: true }),
+      });
+
+      if (!response.ok) throw new Error('Failed to clone course');
+      
+      const data = await response.json();
+      alert(`Course cloned successfully! ${data.clonedLessons} lessons copied.`);
+      router.push(`/admin/courses/${data.course.id}/edit`);
+    } catch (error) {
+      console.error('Error cloning course:', error);
+      alert('Failed to clone course');
+    } finally {
+      setCloning(false);
+    }
+  };
 
   const fetchCourse = async () => {
     try {
@@ -251,17 +287,35 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <h1 style={{ margin: 0, fontSize: '28px', color: '#1a1a1a' }}>
             Edit Course
           </h1>
-          <button
-            onClick={() => router.push('/admin')}
-            style={{
-              padding: '10px 20px',
-              background: '#fff',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px',
-              color: '#495057',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleCloneCourse}
+              disabled={cloning}
+              style={{
+                padding: '10px 20px',
+                background: '#28a745',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: cloning ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                opacity: cloning ? 0.6 : 1,
+              }}
+            >
+              {cloning ? 'Cloning...' : '📋 Clone Course'}
+            </button>
+            <button
+              onClick={() => router.push('/admin')}
+              style={{
+                padding: '10px 20px',
+                background: '#fff',
+                border: '1px solid #dee2e6',
+                borderRadius: '8px',
+                color: '#495057',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
               transition: 'all 0.2s',
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9fa'}
@@ -269,6 +323,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           >
             ← Back to Admin
           </button>
+          </div>
         </div>
 
         {/* Course Details */}
@@ -546,7 +601,50 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Lesson Editor Modal */}
-        {editingLesson && (
+        {editingLesson && useEnhancedEditor && (
+          <EnhancedLessonEditor
+            lesson={editingLesson}
+            isNew={isNewLesson}
+            onSave={async (lessonData) => {
+              setSaving(true);
+              try {
+                const url = isNewLesson
+                  ? '/api/admin/lessons'
+                  : `/api/admin/lessons/${lessonData.id}`;
+                const method = isNewLesson ? 'POST' : 'PUT';
+                
+                const response = await fetch(url, {
+                  method,
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...lessonData,
+                    course_id: course?.id,
+                  }),
+                });
+
+                if (!response.ok) throw new Error('Failed to save');
+                
+                alert('Lesson saved successfully');
+                setEditingLesson(null);
+                setIsNewLesson(false);
+                fetchCourse();
+              } catch (error) {
+                console.error('Error saving lesson:', error);
+                alert('Failed to save lesson');
+              } finally {
+                setSaving(false);
+              }
+            }}
+            onCancel={() => {
+              setEditingLesson(null);
+              setIsNewLesson(false);
+            }}
+            saving={saving}
+          />
+        )}
+        
+        {/* Legacy Lesson Editor Modal */}
+        {editingLesson && !useEnhancedEditor && (
           <div style={{
             position: 'fixed',
             top: 0,

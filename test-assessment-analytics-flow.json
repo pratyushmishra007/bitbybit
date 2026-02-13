@@ -1,0 +1,276 @@
+{
+  "name": "Assessment and Analytics Flow Test",
+  "description": "Test JSON to verify the complete assessment submission, grading, publishing, and analytics update flow",
+  "version": "1.0.0",
+  "flowSteps": [
+    {
+      "step": 1,
+      "actor": "Teacher",
+      "action": "Create Assessment",
+      "endpoint": "POST /api/teacher/assessments",
+      "testData": {
+        "title": "Flow Test Assessment",
+        "type": "quiz",
+        "description": "Testing the complete assessment flow",
+        "totalPoints": 100,
+        "passingScore": 60,
+        "durationMinutes": 30,
+        "isTimed": true,
+        "showResults": false,
+        "maxRetakes": 1,
+        "questions": [
+          {
+            "questionText": "What is 2 + 2?",
+            "questionType": "multiple_choice",
+            "points": 25,
+            "options": [
+              { "text": "3", "isCorrect": false },
+              { "text": "4", "isCorrect": true },
+              { "text": "5", "isCorrect": false }
+            ]
+          },
+          {
+            "questionText": "JavaScript is a compiled language.",
+            "questionType": "true_false",
+            "points": 25,
+            "correctAnswer": "false"
+          },
+          {
+            "questionText": "Explain what a variable is.",
+            "questionType": "short_answer",
+            "points": 50
+          }
+        ]
+      },
+      "expectedResult": {
+        "status": 201,
+        "body": { "success": true, "assessment": { "id": "<uuid>" } }
+      }
+    },
+    {
+      "step": 2,
+      "actor": "Student",
+      "action": "Start Assessment",
+      "endpoint": "POST /api/assessments/{assessmentId}/start",
+      "testData": {},
+      "expectedResult": {
+        "status": 200,
+        "body": { "submission": { "id": "<uuid>", "status": "in_progress" } }
+      }
+    },
+    {
+      "step": 3,
+      "actor": "Student",
+      "action": "Submit Assessment",
+      "endpoint": "POST /api/assessments/{assessmentId}/submit",
+      "testData": {
+        "submissionId": "<from step 2>",
+        "answers": [
+          { "questionId": "<q1-id>", "answer": "1" },
+          { "questionId": "<q2-id>", "answer": "false" },
+          { "questionId": "<q3-id>", "answer": "A variable is a container for storing data values." }
+        ]
+      },
+      "expectedResult": {
+        "status": 200,
+        "body": { 
+          "submission": { 
+            "status": "submitted",
+            "score": 50,
+            "totalPoints": 100,
+            "percentageScore": 50
+          }
+        }
+      },
+      "sideEffects": [
+        "daily_activity table updated with assessments_completed +1",
+        "MCQ and True/False are auto-graded",
+        "Short answer remains ungraded"
+      ]
+    },
+    {
+      "step": 4,
+      "actor": "Teacher",
+      "action": "View Submissions",
+      "endpoint": "GET /api/teacher/assessments/{assessmentId}/submissions",
+      "expectedResult": {
+        "status": 200,
+        "body": {
+          "submissions": [
+            { "status": "submitted", "percentageScore": 50 }
+          ],
+          "statistics": {
+            "needsGrading": 1
+          }
+        }
+      }
+    },
+    {
+      "step": 5,
+      "actor": "Teacher",
+      "action": "Grade Short Answer Question",
+      "endpoint": "POST /api/teacher/assessments/{assessmentId}/submissions/{submissionId}/grade",
+      "testData": {
+        "questionId": "<q3-id>",
+        "pointsAwarded": 40,
+        "feedback": "Good explanation!"
+      },
+      "expectedResult": {
+        "status": 200,
+        "body": { 
+          "success": true,
+          "totalScore": 90,
+          "percentageScore": 90,
+          "status": "graded"
+        }
+      }
+    },
+    {
+      "step": 6,
+      "actor": "Teacher",
+      "action": "View Publish Results Page",
+      "endpoint": "GET /api/assessments/{assessmentId}/publish-results",
+      "expectedResult": {
+        "status": 200,
+        "body": {
+          "submissions": [
+            { "status": "graded", "percentageScore": 90, "includeInResults": true }
+          ],
+          "stats": {
+            "pendingPublish": 1,
+            "alreadyPublished": 0
+          }
+        }
+      }
+    },
+    {
+      "step": 7,
+      "actor": "Teacher",
+      "action": "Publish Results",
+      "endpoint": "POST /api/assessments/{assessmentId}/publish-results",
+      "testData": {
+        "submissionIds": ["<submission-id>"],
+        "sendNotification": true
+      },
+      "expectedResult": {
+        "status": 200,
+        "body": { 
+          "success": true,
+          "publishedCount": 1
+        }
+      },
+      "sideEffects": [
+        "assessment_submissions.status becomes 'results_published'",
+        "assessment_submissions.results_published_at is set",
+        "Notification created in notifications table with type 'assessment_result'"
+      ]
+    },
+    {
+      "step": 8,
+      "actor": "Student",
+      "action": "View Notifications",
+      "endpoint": "GET /api/notifications",
+      "expectedResult": {
+        "status": 200,
+        "body": {
+          "notifications": [
+            {
+              "type": "assessment_result",
+              "title": "Assessment Results Published",
+              "message": "Your results for \"Flow Test Assessment\" are now available. 🎉 You passed! Score: 90%",
+              "link": "/my-assessments",
+              "is_read": false
+            }
+          ],
+          "unreadCount": 1
+        }
+      }
+    },
+    {
+      "step": 9,
+      "actor": "Student",
+      "action": "Check Analytics Updated",
+      "endpoint": "GET /api/analytics/me",
+      "expectedResult": {
+        "status": 200,
+        "body": {
+          "avgAssessmentScore": 90,
+          "assessments": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        }
+      },
+      "notes": "Analytics include graded assessments regardless of publication status"
+    }
+  ],
+  "analyticsFlow": {
+    "description": "How analytics are updated throughout the flow",
+    "events": [
+      {
+        "trigger": "Student submits assessment",
+        "analytics_updated": [
+          "daily_activity.assessments_completed += 1",
+          "daily_activity.time_spent_minutes += time taken",
+          "daily_activity.xp_earned += XP if passed"
+        ]
+      },
+      {
+        "trigger": "Teacher grades submission",
+        "analytics_updated": [
+          "assessment_submissions.total_score",
+          "assessment_submissions.percentage_score",
+          "assessment_submissions.passed",
+          "assessment_submissions.status = 'graded'"
+        ]
+      },
+      {
+        "trigger": "GET /api/analytics/me called",
+        "data_source": "Queries assessment_submissions WHERE status IN ('graded', 'results_published')",
+        "computes": [
+          "avgAssessmentScore from graded submissions",
+          "assessment counts from all submissions"
+        ]
+      },
+      {
+        "trigger": "Teacher publishes results",
+        "analytics_updated": [
+          "assessment_submissions.status = 'results_published'",
+          "notifications table gets new record"
+        ],
+        "note": "Analytics already have this data from grading step - publishing is for student visibility"
+      }
+    ]
+  },
+  "databaseTables": {
+    "notifications": {
+      "description": "Stores notifications for users",
+      "columns": ["id", "user_id", "type", "title", "message", "link", "metadata", "is_read", "created_at"],
+      "needs_migration": true,
+      "migration_file": "add-notifications-system.sql"
+    },
+    "assessment_submissions": {
+      "new_columns": ["results_published_at", "include_in_results", "results_published_by"],
+      "new_status": "results_published",
+      "needs_migration": true,
+      "migration_file": "add-notifications-system.sql"
+    },
+    "daily_activity": {
+      "columns": ["user_id", "date", "lessons_completed", "assessments_completed", "xp_earned", "time_spent_minutes"]
+    }
+  },
+  "testCommands": {
+    "manual": [
+      "1. Run add-notifications-system.sql in Supabase SQL Editor",
+      "2. Login as teacher, create an assessment with mixed question types",
+      "3. Login as student, take and submit the assessment",
+      "4. Login as teacher, grade any manual questions",
+      "5. Go to /teacher/assessments/{id}/publish",
+      "6. Select students and click 'Publish Results'",
+      "7. Login as student, check notification bell",
+      "8. Check /my-assessments for updated results",
+      "9. Check /dashboard/analytics for updated metrics"
+    ]
+  }
+}

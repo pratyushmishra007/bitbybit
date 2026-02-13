@@ -14,6 +14,14 @@ declare module "next-auth" {
       organizationId?: string;
       studentId?: string;
       accountStatus?: string;
+      // NEW: Academic system fields
+      registrationId?: string;
+      batchId?: string;
+      programId?: string;
+      departmentId?: string;
+      enrollmentNumber?: string;
+      currentSemester?: number;
+      division?: string;
     };
   }
 
@@ -25,6 +33,14 @@ declare module "next-auth" {
     organizationId?: string;
     studentId?: string;
     accountStatus?: string;
+    // NEW: Academic system fields
+    registrationId?: string;
+    batchId?: string;
+    programId?: string;
+    departmentId?: string;
+    enrollmentNumber?: string;
+    currentSemester?: number;
+    division?: string;
   }
 }
 
@@ -38,5 +54,13 @@ declare module "next-auth/jwt" {
     organizationId?: string;
     studentId?: string;
     accountStatus?: string;
+    // NEW: Academic system fields
+    registrationId?: string;
+    batchId?: string;
+    programId?: string;
+    departmentId?: string;
+    enrollmentNumber?: string;
+    currentSemester?: number;
+    division?: string;
   }
 }

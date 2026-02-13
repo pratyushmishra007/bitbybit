@@ -1,15 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-
-interface Organization {
-  id: string;
-  name: string;
-  code: string;
-}
+import { useOrg } from "@/contexts/OrgContext";
 
 interface AcademicYear {
   id: string;
@@ -23,16 +15,12 @@ interface AcademicYear {
 }
 
 export default function AcademicYearsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
-  const [selectedOrg, setSelectedOrg] = useState<string>("");
   const [formData, setFormData] = useState({
-    organization_id: "",
     name: "",
     start_date: "",
     end_date: "",
@@ -41,60 +29,33 @@ export default function AcademicYearsPage() {
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
-    }
-
-    fetchOrganizations();
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (selectedOrg) {
-      fetchAcademicYears(selectedOrg);
+    if (selectedOrg?.id) {
+      fetchAcademicYears();
+    } else {
+      setAcademicYears([]);
     }
   }, [selectedOrg]);
 
-  const fetchOrganizations = async () => {
+  const fetchAcademicYears = async () => {
+    if (!selectedOrg?.id) return;
+    setLoading(true);
     try {
-      const response = await fetch("/api/admin/organizations");
+      const response = await fetch(`/api/admin/academic-years?organizationId=${selectedOrg.id}`);
       const data = await response.json();
-      
-      if (response.status === 403) {
-        router.push("/dashboard");
-        return;
-      }
-      
-      if (response.ok && data.organizations) {
-        setOrganizations(data.organizations);
-        if (data.organizations.length > 0) {
-          setSelectedOrg(data.organizations[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching organizations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAcademicYears = async (orgId: string) => {
-    try {
-      const response = await fetch(`/api/admin/academic-years?organizationId=${orgId}`);
-      const data = await response.json();
-
       if (response.ok) {
         setAcademicYears(data.academicYears || []);
       }
     } catch (error) {
       console.error("Error fetching academic years:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrg?.id) return;
+    
     setLoading(true);
     setMessage(null);
 
@@ -108,7 +69,7 @@ export default function AcademicYearsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          organization_id: formData.organization_id || selectedOrg,
+          organization_id: selectedOrg.id,
         }),
       });
 
@@ -119,7 +80,7 @@ export default function AcademicYearsPage() {
         setShowModal(false);
         setEditingYear(null);
         resetForm();
-        fetchAcademicYears(selectedOrg);
+        fetchAcademicYears();
       } else {
         setMessage({ type: "error", text: data.error || "Failed to save academic year" });
       }
@@ -133,7 +94,6 @@ export default function AcademicYearsPage() {
   const handleEdit = (year: AcademicYear) => {
     setEditingYear(year);
     setFormData({
-      organization_id: year.organization_id,
       name: year.name,
       start_date: year.start_date.split("T")[0],
       end_date: year.end_date.split("T")[0],
@@ -154,7 +114,7 @@ export default function AcademicYearsPage() {
 
       if (response.ok) {
         setMessage({ type: "success", text: "Academic year deleted!" });
-        fetchAcademicYears(selectedOrg);
+        fetchAcademicYears();
       } else {
         setMessage({ type: "error", text: data.error || "Failed to delete academic year" });
       }
@@ -173,7 +133,7 @@ export default function AcademicYearsPage() {
 
       if (response.ok) {
         setMessage({ type: "success", text: "Current academic year updated!" });
-        fetchAcademicYears(selectedOrg);
+        fetchAcademicYears();
       }
     } catch (error) {
       setMessage({ type: "error", text: "Error updating academic year" });
@@ -182,7 +142,6 @@ export default function AcademicYearsPage() {
 
   const resetForm = () => {
     setFormData({
-      organization_id: "",
       name: "",
       start_date: "",
       end_date: "",
@@ -198,27 +157,30 @@ export default function AcademicYearsPage() {
     });
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Academic Years
-            </h1>
-            <p className="text-gray-600 mt-2">Manage academic years for organizations</p>
+            <h1 className="text-3xl font-bold text-gray-900">Academic Years</h1>
+            <p className="text-gray-600 mt-1">Managing academic years for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => {
@@ -226,7 +188,7 @@ export default function AcademicYearsPage() {
               setEditingYear(null);
               setShowModal(true);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
           >
             + Add Academic Year
           </button>
@@ -238,22 +200,6 @@ export default function AcademicYearsPage() {
             {message.text}
           </div>
         )}
-
-        {/* Organization Filter */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Organization</label>
-          <select
-            value={selectedOrg}
-            onChange={(e) => setSelectedOrg(e.target.value)}
-            className="w-full md:w-64 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name} ({org.code})
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* Academic Years Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -336,18 +282,9 @@ export default function AcademicYearsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Organization
                 </label>
-                <select
-                  value={formData.organization_id || selectedOrg}
-                  onChange={(e) => setFormData({ ...formData, organization_id: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700">
+                  {selectedOrg.name} ({selectedOrg.code})
+                </div>
               </div>
 
               <div>

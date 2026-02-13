@@ -134,13 +134,19 @@ export async function POST(req: NextRequest) {
       totalPoints = 100,
       passingScore = 60,
       startTime,
-      endTime,
       isTimed = true,
       allowRetakes = false,
       maxRetakes = 1,
       shuffleQuestions = false,
       showResults = true,
     } = body;
+
+    // Calculate end_time from start_time + duration_minutes
+    let endTime = null;
+    if (startTime && durationMinutes) {
+      const startDate = new Date(startTime);
+      endTime = new Date(startDate.getTime() + durationMinutes * 60 * 1000).toISOString();
+    }
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });

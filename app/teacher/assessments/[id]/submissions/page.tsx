@@ -82,10 +82,23 @@ export default function SubmissionsPage() {
 
   const filteredSubmissions = submissions.filter((sub) => {
     if (filter === "all") return true;
-    if (filter === "pending") return sub.status === "submitted";
+    if (filter === "pending") return sub.status === "submitted" || sub.status === "in_progress";
     if (filter === "graded") return sub.status === "graded";
     return true;
   });
+
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case "graded":
+        return { text: "✓ Graded", color: "text-green-600" };
+      case "submitted":
+        return { text: "Needs Grading", color: "text-orange-600" };
+      case "in_progress":
+        return { text: "In Progress", color: "text-blue-600" };
+      default:
+        return { text: status, color: "text-gray-600" };
+    }
+  };
 
   const formatTime = (seconds: number | null) => {
     if (!seconds) return "--";
@@ -120,6 +133,12 @@ export default function SubmissionsPage() {
               Submissions: {assessment?.title}
             </h1>
           </div>
+          <Link
+            href={`/teacher/assessments/${assessmentId}/publish`}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+          >
+            📢 Publish Results
+          </Link>
         </div>
 
         {/* Stats */}
@@ -271,15 +290,14 @@ export default function SubmissionsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={
-                          submission.status === "graded"
-                            ? "text-green-600"
-                            : "text-orange-600"
-                        }
-                      >
-                        {submission.status === "graded" ? "✓" : "Pending"}
-                      </span>
+                      {(() => {
+                        const display = getStatusDisplay(submission.status);
+                        return (
+                          <span className={display.color}>
+                            {display.text}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-center text-gray-600 dark:text-gray-400">
                       {formatTime(submission.timeTakenSeconds)}
@@ -289,7 +307,7 @@ export default function SubmissionsPage() {
                         href={`/teacher/assessments/${assessmentId}/submissions/${submission.id}`}
                         className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 transition-all"
                       >
-                        {submission.status === "graded" ? "View" : "Grade"}
+                        {submission.status === "graded" ? "View" : submission.status === "submitted" ? "Grade" : "View"}
                       </Link>
                     </td>
                   </tr>

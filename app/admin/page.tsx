@@ -263,6 +263,62 @@ export default function AdminDashboard() {
                 <p className="text-4xl font-bold text-rose-600">→</p>
                 <p className="text-gray-600 text-xs mt-2">Manage semesters</p>
               </button>
+
+              <button
+                onClick={() => router.push("/admin/programs")}
+                className="bg-white rounded-xl p-6 border-2 border-cyan-200 hover:border-cyan-400 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Programs</h3>
+                  <svg className="w-8 h-8 text-cyan-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-cyan-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">B.Tech, MCA, etc.</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/batches")}
+                className="bg-white rounded-xl p-6 border-2 border-fuchsia-200 hover:border-fuchsia-400 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Student Batches</h3>
+                  <svg className="w-8 h-8 text-fuchsia-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-fuchsia-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">2024-28, 2023-27, etc.</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/enrollments")}
+                className="bg-linear-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-300 hover:border-emerald-500 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Student Enrollments</h3>
+                  <svg className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-emerald-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">Assign students to batches</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/problems")}
+                className="bg-linear-to-br from-violet-50 to-violet-100 rounded-xl p-6 border-2 border-violet-300 hover:border-violet-500 hover:shadow-lg transition-all text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-700 text-sm font-semibold">Problems</h3>
+                  <svg className="w-8 h-8 text-violet-600 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-4xl font-bold text-violet-600">→</p>
+                <p className="text-gray-600 text-xs mt-2">Manage coding problems</p>
+              </button>
             </div>
 
             {/* Stats Grid */}

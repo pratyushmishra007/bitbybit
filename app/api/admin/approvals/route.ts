@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const organizationId = searchParams.get("organizationId");
+
     // Teachers can see pending students, admins can see all pending
     let query = supabase
       .from("users")
@@ -32,6 +35,11 @@ export async function GET(req: NextRequest) {
       `)
       .eq("account_status", "pending")
       .order("created_at", { ascending: false });
+
+    // Filter by organization if provided
+    if (organizationId) {
+      query = query.eq("organization_id", organizationId);
+    }
 
     if (isTeacher && !isAdmin) {
       // Teachers only see pending students from their classes
@@ -171,6 +179,17 @@ export async function POST(req: NextRequest) {
         { error: "Failed to update user status" },
         { status: 500 }
       );
+    }
+
+    // Send notification to user about approval/rejection
+    try {
+      await NotificationHelpers.approvalStatus(
+        userId,
+        action === "approve" ? "approved" : "rejected",
+        reason
+      );
+    } catch (notifError) {
+      console.error("Failed to send approval notification:", notifError);
     }
 
     return NextResponse.json({

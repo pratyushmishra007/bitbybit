@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../auth/[...nextauth]/route";
 import { createClient } from "@supabase/supabase-js";
+import { NotificationHelpers } from "@/lib/notifications";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -134,6 +135,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     console.log("✅ Help request accepted, collaboration session created:", collabSession.id);
+
+    // Notify the student that help is on the way
+    try {
+      await NotificationHelpers.helpRequestAccepted(
+        helpRequest.student_id,
+        teacher.name || "A teacher",
+        `/collaborate/${collabSession.id}`
+      );
+    } catch (notifError) {
+      console.error("Failed to send help accepted notification:", notifError);
+    }
 
     return NextResponse.json({
       success: true,

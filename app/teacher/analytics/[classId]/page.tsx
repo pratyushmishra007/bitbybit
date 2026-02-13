@@ -87,6 +87,22 @@ interface ActivityDay {
   xp: number;
 }
 
+interface LessonHeatmap {
+  lessons: { id: string; title: string; courseId: string }[];
+  students: {
+    id: string;
+    name: string;
+    progress: { lessonId: string; completed: boolean; attempts: number }[];
+  }[];
+}
+
+interface Insights {
+  mostStruggledLesson: { title: string; completionRate: number } | null;
+  topPerformers: { name: string; progress: number }[];
+  needsAttention: { name: string; reason: string | null; daysSinceActive: number }[];
+  weeklyTrend: "improving" | "declining" | "stable";
+}
+
 type SortField = "name" | "avgProgress" | "engagementScore" | "lastActive" | "lessonsCompleted";
 type SortOrder = "asc" | "desc";
 
@@ -102,10 +118,13 @@ export default function ClassAnalyticsPage() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [activityHeatmap, setActivityHeatmap] = useState<ActivityDay[]>([]);
+  const [lessonHeatmap, setLessonHeatmap] = useState<LessonHeatmap | null>(null);
+  const [insights, setInsights] = useState<Insights | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // UI state
-  const [activeTab, setActiveTab] = useState<"students" | "courses">("students");
+  const [activeTab, setActiveTab] = useState<"students" | "courses" | "heatmap">("students");
   const [sortField, setSortField] = useState<SortField>("avgProgress");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [filterAtRisk, setFilterAtRisk] = useState(false);
@@ -134,10 +153,154 @@ export default function ClassAnalyticsPage() {
       setStudents(data.students || []);
       setCourses(data.courses || []);
       setActivityHeatmap(data.activityHeatmap || []);
+      setLessonHeatmap(data.lessonHeatmap || null);
+      setInsights(data.insights || null);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // PDF Export function
+  const exportToPDF = async () => {
+    setExporting(true);
+    try {
+      // Create a printable version of the analytics
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        alert("Please allow popups to export PDF");
+        return;
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${classInfo?.name || "Class"} Analytics Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            h1 { color: #1f2937; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+            h2 { color: #374151; margin-top: 30px; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
+            .stat-box { background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; }
+            .stat-value { font-size: 24px; font-weight: bold; color: #10b981; }
+            .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+            th { background: #f9fafb; font-weight: 600; }
+            .at-risk { background: #fef2f2; color: #dc2626; }
+            .on-track { background: #f0fdf4; color: #16a34a; }
+            .progress-bar { width: 100px; height: 8px; background: #e5e7eb; border-radius: 4px; }
+            .progress-fill { height: 100%; background: #10b981; border-radius: 4px; }
+            .footer { margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px; }
+            @media print { body { padding: 20px; } }
+          </style>
+        </head>
+        <body>
+          <h1>${classInfo?.name || "Class"} - Analytics Report</h1>
+          <p>Generated: ${new Date().toLocaleDateString()} | Semester: ${classInfo?.currentSemester || "N/A"}</p>
+          
+          <h2>Class Summary</h2>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-value">${summary?.totalStudents || 0}</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">${summary?.activeStudents || 0}</div>
+              <div class="stat-label">Active (7 days)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">${summary?.atRiskStudents || 0}</div>
+              <div class="stat-label">At Risk</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">${summary?.avgProgress || 0}%</div>
+              <div class="stat-label">Avg Progress</div>
+            </div>
+          </div>
+
+          ${insights ? `
+          <h2>Key Insights</h2>
+          <ul>
+            <li>Weekly trend: <strong>${insights.weeklyTrend}</strong></li>
+            ${insights.mostStruggledLesson ? `<li>Most struggled lesson: ${insights.mostStruggledLesson.title} (${insights.mostStruggledLesson.completionRate}% completion)</li>` : ""}
+            <li>Top performers: ${insights.topPerformers.map(p => `${p.name} (${p.progress}%)`).join(", ") || "N/A"}</li>
+          </ul>
+          ` : ""}
+
+          <h2>Student Progress</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Progress</th>
+                <th>Lessons</th>
+                <th>Engagement</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map(s => `
+                <tr>
+                  <td>${s.name}</td>
+                  <td>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${s.avgProgress}%"></div>
+                    </div>
+                    ${s.avgProgress}%
+                  </td>
+                  <td>${s.lessonsCompleted}</td>
+                  <td>${s.engagementScore}</td>
+                  <td class="${s.isAtRisk ? "at-risk" : "on-track"}">${s.isAtRisk ? "At Risk" : "On Track"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <h2>Courses Overview</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Enrolled</th>
+                <th>Completed</th>
+                <th>In Progress</th>
+                <th>Avg Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${courses.map(c => `
+                <tr>
+                  <td>${c.title}</td>
+                  <td>${c.enrolledCount}</td>
+                  <td>${c.completedCount}</td>
+                  <td>${c.inProgressCount}</td>
+                  <td>${c.avgProgress}%</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            BitByBit Learning Platform - Class Analytics Report
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    } catch (err) {
+      console.error("Error exporting PDF:", err);
+      alert("Failed to export PDF");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -256,12 +419,78 @@ export default function ClassAnalyticsPage() {
                 {classInfo?.department?.name || "No Department"}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">{classInfo?.currentSemester}</p>
-              <p className="text-sm text-gray-500">{classInfo?.academicYear}</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">{classInfo?.currentSemester}</p>
+                <p className="text-sm text-gray-500">{classInfo?.academicYear}</p>
+              </div>
+              <button
+                onClick={exportToPDF}
+                disabled={exporting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {exporting ? "Exporting..." : "Export PDF"}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Insights Panel */}
+        {insights && (
+          <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-xl p-6 mb-8 border border-emerald-100 dark:border-emerald-800">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              Key Insights
+            </h2>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-500 mb-1">Weekly Trend</p>
+                <p className={`font-bold ${
+                  insights.weeklyTrend === "improving" ? "text-green-600" :
+                  insights.weeklyTrend === "declining" ? "text-red-600" : "text-gray-600"
+                }`}>
+                  {insights.weeklyTrend === "improving" ? "📈 Improving" :
+                   insights.weeklyTrend === "declining" ? "📉 Declining" : "➡️ Stable"}
+                </p>
+              </div>
+              {insights.mostStruggledLesson && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <p className="text-sm text-gray-500 mb-1">Needs Review</p>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm truncate" title={insights.mostStruggledLesson.title}>
+                    {insights.mostStruggledLesson.title}
+                  </p>
+                  <p className="text-xs text-red-500">{insights.mostStruggledLesson.completionRate}% completion</p>
+                </div>
+              )}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-500 mb-1">Top Performers</p>
+                <div className="space-y-1">
+                  {insights.topPerformers.slice(0, 2).map((p, i) => (
+                    <p key={i} className="text-sm">
+                      <span className="font-medium text-gray-900 dark:text-white">{p.name}</span>
+                      <span className="text-emerald-600 ml-1">{p.progress}%</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-500 mb-1">Need Attention</p>
+                {insights.needsAttention.length > 0 ? (
+                  <p className="text-sm text-red-600 font-medium">
+                    {insights.needsAttention.length} student{insights.needsAttention.length > 1 ? "s" : ""}
+                  </p>
+                ) : (
+                  <p className="text-sm text-green-600">All on track!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
@@ -362,7 +591,90 @@ export default function ClassAnalyticsPage() {
           >
             Courses ({courses.length})
           </button>
+          <button
+            onClick={() => setActiveTab("heatmap")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === "heatmap"
+                ? "bg-blue-600 text-white"
+                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            Progress Heatmap
+          </button>
         </div>
+
+        {/* Progress Heatmap Tab */}
+        {activeTab === "heatmap" && lessonHeatmap && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              Student × Lesson Progress Heatmap
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Green = completed, Gray = not started. Click a cell to see details.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-white dark:bg-gray-800 z-10">
+                      Student
+                    </th>
+                    {lessonHeatmap.lessons.map((lesson) => (
+                      <th
+                        key={lesson.id}
+                        className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        title={lesson.title}
+                      >
+                        <div className="w-8 truncate transform -rotate-45 origin-left ml-4">
+                          {lesson.title.substring(0, 10)}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {lessonHeatmap.students.map((student) => (
+                    <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800">
+                        {student.name}
+                      </td>
+                      {student.progress.map((p, i) => (
+                        <td key={i} className="px-1 py-1 text-center">
+                          <div
+                            className={`w-6 h-6 mx-auto rounded cursor-pointer transition-all hover:scale-110 ${
+                              p.completed
+                                ? "bg-emerald-500"
+                                : p.attempts > 0
+                                ? "bg-yellow-400"
+                                : "bg-gray-200 dark:bg-gray-600"
+                            }`}
+                            title={`${lessonHeatmap.lessons[i]?.title || "Lesson"}: ${
+                              p.completed ? "Completed" : p.attempts > 0 ? `${p.attempts} attempts` : "Not started"
+                            }`}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 flex gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-emerald-500"></div>
+                <span className="text-gray-600 dark:text-gray-400">Completed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-yellow-400"></div>
+                <span className="text-gray-600 dark:text-gray-400">In Progress</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-600"></div>
+                <span className="text-gray-600 dark:text-gray-400">Not Started</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Students Tab */}
         {activeTab === "students" && (

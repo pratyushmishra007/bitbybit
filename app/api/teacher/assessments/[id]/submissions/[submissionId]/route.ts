@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createClient } from "@supabase/supabase-js";
+import { NotificationHelpers } from "@/lib/notifications";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -311,6 +312,18 @@ export async function PUT(
     if (error) {
       console.error("Error updating submission:", error);
       return NextResponse.json({ error: "Failed to update submission" }, { status: 500 });
+    }
+
+    // Notify student that their assessment was graded
+    try {
+      await NotificationHelpers.assessmentGraded(
+        submission.user_id,
+        assessment.title,
+        updatedSubmission.percentage_score,
+        updatedSubmission.passed
+      );
+    } catch (notifError) {
+      console.error("Failed to send assessment graded notification:", notifError);
     }
 
     return NextResponse.json({

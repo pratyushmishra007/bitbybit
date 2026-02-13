@@ -1,9 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useOrg } from "@/contexts/OrgContext";
 
 interface Class {
   id: string;
@@ -18,12 +16,6 @@ interface Class {
   _count?: { enrollments: number };
 }
 
-interface Organization {
-  id: string;
-  name: string;
-  code: string;
-}
-
 interface Department {
   id: string;
   name: string;
@@ -31,12 +23,10 @@ interface Department {
 }
 
 export default function ClassesPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs, departments: contextDepts } = useOrg();
   const [classes, setClasses] = useState<Class[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [formData, setFormData] = useState({
@@ -50,32 +40,25 @@ export default function ClassesPage() {
   });
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
+    if (selectedOrg?.id) {
+      fetchClasses(selectedOrg.id);
+      fetchDepartments(selectedOrg.id);
+    } else {
+      setClasses([]);
+      setDepartments([]);
     }
+  }, [selectedOrg]);
 
-    fetchData();
-  }, [session, status, router]);
-
-  const fetchData = async () => {
+  const fetchClasses = async (orgId: string) => {
+    setLoading(true);
     try {
-      const [classesRes, orgsRes] = await Promise.all([
-        fetch("/api/admin/classes"),
-        fetch("/api/admin/organizations"),
-      ]);
-
-      const [classesData, orgsData] = await Promise.all([
-        classesRes.json(),
-        orgsRes.json(),
-      ]);
-
-      if (classesRes.ok) setClasses(classesData.classes || []);
-      if (orgsRes.ok) setOrganizations(orgsData.organizations || []);
+      const response = await fetch(`/api/admin/classes?organizationId=${orgId}`);
+      const data = await response.json();
+      if (response.ok) {
+        setClasses(data.classes || []);
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching classes:", error);
     } finally {
       setLoading(false);
     }
@@ -95,6 +78,8 @@ export default function ClassesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrg?.id) return;
+    
     setLoading(true);
 
     try {
@@ -105,14 +90,17 @@ export default function ClassesPage() {
       const response = await fetch(url, {
         method: editingClass ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          organization_id: selectedOrg.id,
+        }),
       });
 
       if (response.ok) {
         setShowModal(false);
         setEditingClass(null);
         resetForm();
-        fetchData();
+        fetchClasses(selectedOrg.id);
       }
     } catch (error) {
       console.error("Error saving class:", error);
@@ -132,12 +120,12 @@ export default function ClassesPage() {
       capacity: cls.capacity,
       description: cls.description || "",
     });
-    fetchDepartments(cls.organization.id);
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this class?")) return;
+    if (!selectedOrg?.id) return;
 
     try {
       const response = await fetch(`/api/admin/classes?id=${id}`, {
@@ -145,7 +133,7 @@ export default function ClassesPage() {
       });
 
       if (response.ok) {
-        fetchData();
+        fetchClasses(selectedOrg.id);
       }
     } catch (error) {
       console.error("Error deleting class:", error);
@@ -156,34 +144,39 @@ export default function ClassesPage() {
     setFormData({
       name: "",
       code: "",
-      organization_id: "",
+      organization_id: selectedOrg?.id || "",
       department_id: "",
       year_level: 1,
       capacity: 50,
       description: "",
     });
-    setDepartments([]);
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900">
               Classes
             </h1>
+            <p className="text-gray-600 mt-1">Classes for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => {
@@ -191,7 +184,7 @@ export default function ClassesPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-lg"
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
           >
             + Add Class
           </button>
@@ -249,24 +242,11 @@ export default function ClassesPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization *
+                    Organization
                   </label>
-                  <select
-                    value={formData.organization_id}
-                    onChange={(e) => {
-                      setFormData({ ...formData, organization_id: e.target.value, department_id: "" });
-                      if (e.target.value) fetchDepartments(e.target.value);
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    required
-                  >
-                    <option value="">Select organization</option>
-                    {organizations.map((org) => (
-                      <option key={org.id} value={org.id}>
-                        {org.name} ({org.code})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedOrg.name} ({selectedOrg.code})
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -337,7 +317,6 @@ export default function ClassesPage() {
                     value={formData.department_id}
                     onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    disabled={!formData.organization_id}
                   >
                     <option value="">No department</option>
                     {departments.map((dept) => (

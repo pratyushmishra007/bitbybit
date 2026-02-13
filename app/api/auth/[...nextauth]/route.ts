@@ -3,6 +3,13 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+// Service role client for admin operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -46,10 +53,10 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile, credentials }: any) {
       try {
-        // Check if user exists in our database
-        const { data: existingUser } = await supabase
+        // Check if user exists in our database by email
+        const { data: existingUser } = await supabaseAdmin
           .from("users")
-          .select("*")
+          .select("id, email, account_status")
           .eq("email", user.email)
           .single();
 
@@ -57,35 +64,46 @@ export const authOptions: NextAuthOptions = {
         const isOAuthProvider = account?.provider === 'google' || account?.provider === 'github';
         
         if (!existingUser) {
-          // NEW USER - Only allow if using OAuth from signup page or credentials
+          // NEW USER - Create in public.users
           if (isOAuthProvider) {
-            // For OAuth, always allow signup and create user
-            const accountStatus = 'approved';
+            // Generate a proper UUID for the new user
+            const newUserId = crypto.randomUUID();
             
-            const { error } = await supabase.from("users").insert({
-              id: user.id,
+            const { error } = await supabaseAdmin.from("users").insert({
+              id: newUserId,
               email: user.email,
-              name: user.name || user.email,
+              name: user.name || user.email?.split('@')[0] || 'User',
               avatar: user.image,
+              avatar_url: user.image,
               role: "student",
-              account_status: accountStatus,
+              account_status: 'approved',
               xp: 0,
               level: 1,
               streak_days: 0,
-              lessons_completed: 0,
+              created_at: new Date().toISOString(),
+              joined_at: new Date().toISOString(),
             });
 
             if (error) {
-              console.error("Error creating user:", error);
-              return false;
+              console.error("❌ Error creating user:", error);
+              // If it's a duplicate key error, user might exist, continue anyway
+              if (!error.message?.includes('duplicate')) {
+                return false;
+              }
+            } else {
+              console.log(`✅ Created new user via ${account.provider}: ${user.email} with ID: ${newUserId}`);
+              // Update the user object with our generated ID so session callback can use it
+              user.id = newUserId;
             }
-            console.log(`✅ Created new user via ${account.provider}: ${user.email}`);
             return true;
           }
           // Credentials provider handles user creation in authorize function
           return true;
         } else {
-          // EXISTING USER - Check account status
+          // EXISTING USER - Update user.id to match database and check status
+          console.log(`📝 Found existing user: ${user.email} with ID: ${existingUser.id}`);
+          user.id = existingUser.id; // Use the ID from database
+          
           if (existingUser.account_status === 'pending') {
             console.log(`⏳ Signin blocked for ${user.email}: Account pending approval`);
             return '/auth/pending-approval';
@@ -112,11 +130,11 @@ export const authOptions: NextAuthOptions = {
         console.log('🔐 Session callback - token.sub:', token.sub);
         console.log('🔐 Session callback - user email:', session.user.email);
 
-        // Fetch user data from database
+        // Fetch user data from database (use supabaseAdmin to bypass RLS)
         try {
-          const { data: userData } = await supabase
+          const { data: userData } = await supabaseAdmin
             .from("users")
-            .select("xp, level, streak_days, role, organization_id, student_id, account_status")
+            .select("xp, level, streak_days, role, organization_id, student_id, account_status, department_id")
             .eq("id", token.sub)
             .single();
 
@@ -130,12 +148,45 @@ export const authOptions: NextAuthOptions = {
             session.user.organizationId = userData.organization_id;
             session.user.studentId = userData.student_id;
             session.user.accountStatus = userData.account_status;
+            session.user.departmentId = userData.department_id;
+
+            // Fetch student registration data for academic students
+            if (userData.role === 'student' && userData.organization_id) {
+              const { data: registration } = await supabaseAdmin
+                .from("student_registrations")
+                .select(`
+                  id,
+                  batch_id,
+                  division,
+                  enrollment_number,
+                  current_semester,
+                  batch:student_batches(
+                    id,
+                    program_id,
+                    department_id
+                  )
+                `)
+                .eq("user_id", token.sub)
+                .single();
+
+              if (registration) {
+                session.user.registrationId = registration.id;
+                session.user.batchId = registration.batch_id;
+                session.user.division = registration.division;
+                session.user.enrollmentNumber = registration.enrollment_number;
+                session.user.currentSemester = registration.current_semester;
+                if (registration.batch) {
+                  session.user.programId = (registration.batch as any).program_id;
+                  session.user.departmentId = (registration.batch as any).department_id;
+                }
+              }
+            }
           } else {
             console.log('⚠️ No user found by ID, trying email lookup...');
-            // If no user data found, try fetching by email
-            const { data: userByEmail } = await supabase
+            // If no user data found, try fetching by email (use supabaseAdmin to bypass RLS)
+            const { data: userByEmail } = await supabaseAdmin
               .from("users")
-              .select("id, xp, level, streak_days, role, organization_id, student_id, account_status")
+              .select("id, xp, level, streak_days, role, organization_id, student_id, account_status, department_id")
               .eq("email", session.user.email)
               .single();
 
@@ -152,6 +203,67 @@ export const authOptions: NextAuthOptions = {
               session.user.organizationId = userByEmail.organization_id;
               session.user.studentId = userByEmail.student_id;
               session.user.accountStatus = userByEmail.account_status;
+              session.user.departmentId = userByEmail.department_id;
+
+              // Fetch student registration for email-found user
+              if (userByEmail.role === 'student' && userByEmail.organization_id) {
+                const { data: registration } = await supabaseAdmin
+                  .from("student_registrations")
+                  .select(`
+                    id,
+                    batch_id,
+                    division,
+                    enrollment_number,
+                    current_semester,
+                    batch:student_batches(
+                      id,
+                      program_id,
+                      department_id
+                    )
+                  `)
+                  .eq("user_id", userByEmail.id)
+                  .single();
+
+                if (registration) {
+                  session.user.registrationId = registration.id;
+                  session.user.batchId = registration.batch_id;
+                  session.user.division = registration.division;
+                  session.user.enrollmentNumber = registration.enrollment_number;
+                  session.user.currentSemester = registration.current_semester;
+                  if (registration.batch) {
+                    session.user.programId = (registration.batch as any).program_id;
+                    session.user.departmentId = (registration.batch as any).department_id;
+                  }
+                }
+              }
+            } else {
+              // User doesn't exist at all - auto-create them
+              console.log('🆕 User not found anywhere, auto-creating:', session.user.email);
+              const { error: createError } = await supabaseAdmin.from("users").insert({
+                id: token.sub,
+                email: session.user.email,
+                name: session.user.name || session.user.email?.split('@')[0] || 'User',
+                avatar: session.user.image,
+                avatar_url: session.user.image,
+                role: "admin", // Give admin role for existing sessions
+                account_status: 'approved',
+                xp: 0,
+                level: 1,
+                streak_days: 0,
+                created_at: new Date().toISOString(),
+                joined_at: new Date().toISOString(),
+              });
+
+              if (createError) {
+                console.error('❌ Failed to auto-create user:', createError);
+              } else {
+                console.log('✅ Auto-created user:', session.user.email);
+                session.user.xp = 0;
+                session.user.level = 1;
+                session.user.streakDays = 0;
+                session.user.role = "admin";
+                session.user.accountStatus = "approved";
+              }
             }
           }
         } catch (error) {

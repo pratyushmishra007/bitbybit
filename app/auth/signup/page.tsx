@@ -26,6 +26,32 @@ interface ClassData {
   semester: { id: string; name: string; semester_number: number } | null;
 }
 
+interface ProgramData {
+  id: string;
+  name: string;
+  code: string;
+  short_name: string;
+  duration_years: number;
+  total_semesters: number;
+  degree_type: string;
+}
+
+interface DepartmentData {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface BatchData {
+  id: string;
+  name: string;
+  admission_year: number;
+  expected_graduation: number;
+  total_students: number;
+  program: ProgramData | null;
+  department: DepartmentData | null;
+}
+
 export default function SignUpPage() {
   const router = useRouter();
   const [signupType, setSignupType] = useState<SignupType>(null);
@@ -39,9 +65,21 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [organizationCode, setOrganizationCode] = useState("");
   const [organization, setOrganization] = useState<OrganizationData | null>(null);
+  
+  // Legacy class-based data (backward compatibility)
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [studentId, setStudentId] = useState("");
+
+  // NEW: Academic system data
+  const [programs, setPrograms] = useState<ProgramData[]>([]);
+  const [departments, setDepartments] = useState<DepartmentData[]>([]);
+  const [batches, setBatches] = useState<BatchData[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState("");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [useAcademicSystem, setUseAcademicSystem] = useState(true); // Default to new system
 
   // Validation states
   const [emailError, setEmailError] = useState("");
@@ -134,23 +172,58 @@ export default function SignUpPage() {
 
       setOrganization(data.organization);
       
-      // Teachers don't need to select a class, skip to account creation
+      // Teachers don't need to select a class/batch, skip to account creation
       if (signupType === "teacher") {
-        await createAccount();
+        // Optionally fetch departments for teachers to select
+        const deptResponse = await fetch(
+          `/api/auth/departments?organizationId=${data.organization.id}`
+        );
+        const deptData = await deptResponse.json();
+        if (deptResponse.ok) {
+          setDepartments(deptData.departments || []);
+        }
+        setStep(4); // Go to department selection (optional) then account creation
+        setLoading(false);
         return;
       }
       
-      // Fetch classes for this organization (students only)
-      const classesResponse = await fetch(
-        `/api/auth/classes?organizationId=${data.organization.id}`
-      );
-      const classesData = await classesResponse.json();
+      // For students, fetch programs, departments, and batches
+      const [programsRes, departmentsRes, batchesRes] = await Promise.all([
+        fetch(`/api/auth/programs?organizationId=${data.organization.id}`),
+        fetch(`/api/auth/departments?organizationId=${data.organization.id}`),
+        fetch(`/api/auth/batches?organizationId=${data.organization.id}`),
+      ]);
 
-      if (classesResponse.ok) {
-        setClasses(classesData.classes || []);
-        setStep(4);
+      const [programsData, departmentsData, batchesData] = await Promise.all([
+        programsRes.json(),
+        departmentsRes.json(),
+        batchesRes.json(),
+      ]);
+
+      const hasPrograms = programsData.programs?.length > 0;
+      const hasBatches = batchesData.batches?.length > 0;
+
+      // Check if academic system is available
+      if (hasPrograms && hasBatches) {
+        setPrograms(programsData.programs || []);
+        setDepartments(departmentsData.departments || []);
+        setBatches(batchesData.batches || []);
+        setUseAcademicSystem(true);
+        setStep(4); // Academic system flow
       } else {
-        setError("Failed to load classes");
+        // Fall back to legacy class-based flow
+        const classesResponse = await fetch(
+          `/api/auth/classes?organizationId=${data.organization.id}`
+        );
+        const classesData = await classesResponse.json();
+
+        if (classesResponse.ok && classesData.classes?.length > 0) {
+          setClasses(classesData.classes);
+          setUseAcademicSystem(false);
+          setStep(6); // Legacy class selection
+        } else {
+          setError("No programs or classes are available for this organization. Please contact your administrator.");
+        }
       }
     } catch (error) {
       console.error("Error verifying organization:", error);
@@ -167,7 +240,24 @@ export default function SignUpPage() {
       return;
     }
     setError("");
-    setStep(5);
+    setStep(7); // Legacy student ID step
+  };
+
+  // Filter batches when program or department changes
+  const filteredBatches = batches.filter(batch => {
+    if (selectedProgramId && batch.program?.id !== selectedProgramId) return false;
+    if (selectedDepartmentId && batch.department?.id !== selectedDepartmentId) return false;
+    return true;
+  });
+
+  const handleBatchSelection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBatchId || !selectedDivision) {
+      setError("Please select a batch and division");
+      return;
+    }
+    setError("");
+    createAccount();
   };
 
   const createAccount = async () => {
@@ -175,19 +265,38 @@ export default function SignUpPage() {
     setError("");
 
     try {
+      // Build signup payload
+      const signupPayload: any = {
+        email,
+        password,
+        name,
+        signupType,
+        organizationId: organization?.id || null,
+      };
+
+      // Add academic system data OR legacy class data
+      if (signupType === "institutional") {
+        if (useAcademicSystem && selectedBatchId) {
+          signupPayload.batchId = selectedBatchId;
+          signupPayload.division = selectedDivision;
+          signupPayload.programId = selectedProgramId;
+          signupPayload.departmentId = selectedDepartmentId;
+        } else {
+          signupPayload.classId = selectedClassId;
+          signupPayload.studentId = studentId;
+        }
+      }
+
+      // Add department for teachers (optional)
+      if (signupType === "teacher" && selectedDepartmentId) {
+        signupPayload.departmentId = selectedDepartmentId;
+      }
+
       // Create user in Supabase
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          signupType,
-          organizationId: organization?.id || null,
-          classId: selectedClassId || null,
-          studentId: studentId || null,
-        }),
+        body: JSON.stringify(signupPayload),
       });
 
       const data = await response.json();
@@ -429,8 +538,160 @@ export default function SignUpPage() {
           </form>
         )}
 
-        {/* Step 4: Class Selection */}
+        {/* Step 4: Program/Department/Batch Selection (Academic System) OR Teacher Department */}
         {step === 4 && (
+          <form onSubmit={signupType === "teacher" ? (e) => { e.preventDefault(); createAccount(); } : handleBatchSelection} className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              {signupType === "teacher" ? "Department (Optional)" : "Select Your Program & Batch"}
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              {organization?.name}
+            </p>
+
+            {signupType === "institutional" && (
+              <>
+                {/* Program Selection */}
+                {programs.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Program
+                    </label>
+                    <select
+                      value={selectedProgramId}
+                      onChange={(e) => {
+                        setSelectedProgramId(e.target.value);
+                        setSelectedBatchId(""); // Reset batch when program changes
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="">All Programs</option>
+                      {programs.map((program) => (
+                        <option key={program.id} value={program.id}>
+                          {program.name} ({program.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Department Selection */}
+                {departments.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Department
+                    </label>
+                    <select
+                      value={selectedDepartmentId}
+                      onChange={(e) => {
+                        setSelectedDepartmentId(e.target.value);
+                        setSelectedBatchId(""); // Reset batch when department changes
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="">All Departments</option>
+                      {departments.map((dept) => (
+                        <option key={dept.id} value={dept.id}>
+                          {dept.name} ({dept.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Batch Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Batch (Admission Year)
+                  </label>
+                  <select
+                    value={selectedBatchId}
+                    onChange={(e) => setSelectedBatchId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select your batch</option>
+                    {filteredBatches.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name} ({batch.admission_year}-{batch.expected_graduation})
+                        {batch.program ? ` - ${batch.program.short_name || batch.program.code}` : ""}
+                        {batch.department ? ` / ${batch.department.code}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Division Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Division
+                  </label>
+                  <select
+                    value={selectedDivision}
+                    onChange={(e) => setSelectedDivision(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select your division</option>
+                    <option value="A">Division A</option>
+                    <option value="B">Division B</option>
+                    <option value="C">Division C</option>
+                    <option value="D">Division D</option>
+                    <option value="E">Division E</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {signupType === "teacher" && departments.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department (Optional)
+                </label>
+                <select
+                  value={selectedDepartmentId}
+                  onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="">No specific department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name} ({dept.code})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  You can skip this and set it later
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep(3);
+                  setOrganization(null);
+                  setPrograms([]);
+                  setDepartments([]);
+                  setBatches([]);
+                }}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading || (signupType === "institutional" && (!selectedBatchId || !selectedDivision))}
+                className="flex-1 px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              >
+                {loading ? "Creating..." : "Create Account"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Step 6: Legacy Class Selection (Fallback) */}
+        {step === 6 && (
           <form onSubmit={handleClassSelection} className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">
               Select Your Class
@@ -441,10 +702,10 @@ export default function SignUpPage() {
             
             {classes.length === 0 ? (
               <div className="p-6 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-amber-800 font-medium mb-2">⚠️ No Classes Available</p>
+                <p className="text-amber-800 font-medium mb-2">No Classes Available</p>
                 <p className="text-sm text-amber-700 mb-4">
                   There are currently no classes set up for your organization. 
-                  Please contact your institution's administrator to create classes first.
+                  Please contact your institution&apos;s administrator to create classes first.
                 </p>
                 <button
                   type="button"
@@ -503,8 +764,8 @@ export default function SignUpPage() {
           </form>
         )}
 
-        {/* Step 5: Student ID */}
-        {step === 5 && (
+        {/* Step 7: Legacy Student ID */}
+        {step === 7 && (
           <form onSubmit={(e) => { e.preventDefault(); createAccount(); }} className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Student ID
@@ -528,7 +789,7 @@ export default function SignUpPage() {
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
-                onClick={() => setStep(4)}
+                onClick={() => setStep(6)}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Back

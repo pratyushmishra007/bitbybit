@@ -1,15 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-
-interface Organization {
-  id: string;
-  name: string;
-  code: string;
-}
+import { useOrg } from "@/contexts/OrgContext";
 
 interface AcademicYear {
   id: string;
@@ -29,18 +21,16 @@ interface Semester {
 }
 
 export default function SemestersPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const [semesters, setSemesters] = useState<Semester[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
-  const [selectedOrg, setSelectedOrg] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
-    academic_year: "",
+    academic_year_id: "",
+    semester_number: 1,
     start_date: "",
     end_date: "",
     is_active: false,
@@ -48,64 +38,36 @@ export default function SemestersPage() {
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
-    }
-
-    fetchOrganizations();
-    fetchSemesters();
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (selectedOrg) {
-      fetchAcademicYears(selectedOrg);
+    if (selectedOrg?.id) {
+      fetchAcademicYears();
+      fetchSemesters();
+    } else {
+      setSemesters([]);
+      setAcademicYears([]);
     }
   }, [selectedOrg]);
 
-  const fetchOrganizations = async () => {
-    try {
-      const response = await fetch("/api/admin/organizations");
-      const data = await response.json();
-      
-      if (response.status === 403) {
-        router.push("/dashboard");
-        return;
-      }
-      
-      if (response.ok && data.organizations) {
-        setOrganizations(data.organizations);
-        if (data.organizations.length > 0) {
-          setSelectedOrg(data.organizations[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching organizations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchSemesters = async () => {
+    if (!selectedOrg?.id) return;
+    setLoading(true);
     try {
-      const response = await fetch("/api/semesters");
+      const response = await fetch(`/api/semesters?organizationId=${selectedOrg.id}`);
       const data = await response.json();
-
       if (response.ok) {
         setSemesters(data.semesters || []);
       }
     } catch (error) {
       console.error("Error fetching semesters:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchAcademicYears = async (orgId: string) => {
+  const fetchAcademicYears = async () => {
+    if (!selectedOrg?.id) return;
     try {
-      const response = await fetch(`/api/admin/academic-years?organizationId=${orgId}`);
+      const response = await fetch(`/api/admin/academic-years?organizationId=${selectedOrg.id}`);
       const data = await response.json();
-
       if (response.ok) {
         setAcademicYears(data.academicYears || []);
       }
@@ -157,7 +119,8 @@ export default function SemestersPage() {
     setEditingSemester(semester);
     setFormData({
       name: semester.name,
-      academic_year: semester.academic_year || "",
+      academic_year_id: semester.academic_year_id || "",
+      semester_number: (semester as any).semester_number || 1,
       start_date: semester.start_date.split("T")[0],
       end_date: semester.end_date.split("T")[0],
       is_active: semester.is_active,
@@ -185,7 +148,8 @@ export default function SemestersPage() {
   const resetForm = () => {
     setFormData({
       name: "",
-      academic_year: "",
+      academic_year_id: "",
+      semester_number: 1,
       start_date: "",
       end_date: "",
       is_active: false,
@@ -200,27 +164,30 @@ export default function SemestersPage() {
     });
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Semesters
-            </h1>
-            <p className="text-gray-600 mt-2">Manage academic semesters</p>
+            <h1 className="text-3xl font-bold text-gray-900">Semesters</h1>
+            <p className="text-gray-600 mt-1">Manage academic semesters for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => {
@@ -228,7 +195,7 @@ export default function SemestersPage() {
               setEditingSemester(null);
               setShowModal(true);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
           >
             + Add Semester
           </button>
@@ -333,13 +300,39 @@ export default function SemestersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Academic Year *
                 </label>
-                <input
-                  type="text"
-                  value={formData.academic_year}
-                  onChange={(e) => setFormData({ ...formData, academic_year: e.target.value })}
+                <select
+                  value={formData.academic_year_id}
+                  onChange={(e) => setFormData({ ...formData, academic_year_id: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., 2025-2026"
                   required
+                >
+                  <option value="">Select Academic Year</option>
+                  {academicYears.map((ay) => (
+                    <option key={ay.id} value={ay.id}>
+                      {ay.name} {ay.is_current && "(Current)"}
+                    </option>
+                  ))}
+                </select>
+                {academicYears.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    No academic years found. 
+                    <Link href="/admin/academic-years" className="underline ml-1">Create one first</Link>
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Semester Number
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={formData.semester_number}
+                  onChange={(e) => setFormData({ ...formData, semester_number: parseInt(e.target.value) || 1 })}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., 1, 2, 3..."
                 />
               </div>
 

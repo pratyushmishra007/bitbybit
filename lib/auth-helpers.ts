@@ -10,11 +10,13 @@ const supabase = createClient(
 /**
  * Check if the current session user has admin role
  * Fetches from database if role is not in session
+ * Supports: admin, platform_admin, org_admin, hod
  */
 export async function checkAdminAccess(): Promise<{
   isAdmin: boolean;
   session: any;
   userRole?: string;
+  organizationId?: string;
 }> {
   const session = await getServerSession(authOptions);
 
@@ -24,15 +26,17 @@ export async function checkAdminAccess(): Promise<{
 
   // Check role from session OR fetch from database
   let userRole = (session.user as any).role;
+  let organizationId = (session.user as any).organization_id;
   
   if (!userRole) {
     const { data: userData } = await supabase
       .from("users")
-      .select("role, id")
+      .select("role, id, organization_id")
       .eq("email", session.user.email)
       .single();
     
     userRole = userData?.role;
+    organizationId = userData?.organization_id;
     
     // Also update session user id if needed
     if (userData?.id && !session.user.id) {
@@ -40,10 +44,14 @@ export async function checkAdminAccess(): Promise<{
     }
   }
 
+  // Admin-level roles that can access admin features
+  const adminRoles = ["admin", "platform_admin", "org_admin", "hod"];
+
   return {
-    isAdmin: userRole === "admin",
+    isAdmin: adminRoles.includes(userRole),
     session,
     userRole,
+    organizationId,
   };
 }
 

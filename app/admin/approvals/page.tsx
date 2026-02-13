@@ -1,9 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useOrg } from "@/contexts/OrgContext";
 
 // Force dynamic rendering to avoid prerendering issues
 export const dynamic = 'force-dynamic';
@@ -20,32 +18,25 @@ interface PendingUser {
 }
 
 export default function ApprovalsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const [pending, setPending] = useState<PendingUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
+    if (selectedOrg?.id) {
+      fetchPending();
+    } else {
+      setPending([]);
     }
-
-    fetchPending();
-  }, [session, status, router]);
+  }, [selectedOrg]);
 
   const fetchPending = async () => {
+    if (!selectedOrg?.id) return;
+    setLoading(true);
     try {
-      const response = await fetch("/api/admin/approvals");
+      const response = await fetch(`/api/admin/approvals?organizationId=${selectedOrg.id}`);
       const data = await response.json();
-      
-      if (response.status === 403) {
-        router.push("/dashboard");
-        return;
-      }
       
       if (response.ok) {
         setPending(data.pending || []);
@@ -82,9 +73,9 @@ export default function ApprovalsPage() {
     }
   };
 
-  if (loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="inline-block w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-600 text-lg">Loading pending approvals...</p>
@@ -93,19 +84,22 @@ export default function ApprovalsPage() {
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white pt-20 px-4 pb-12">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-blue-600 hover:text-blue-700 text-sm mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Pending Approvals
-            </h1>
-            <p className="text-gray-600">Review and approve user registration requests</p>
+            <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
+            <p className="text-gray-600 mt-1">Review and approve user registration requests for {selectedOrg.name}</p>
           </div>
           <div className="bg-blue-100 px-4 py-2 rounded-lg">
             <span className="text-blue-800 font-semibold">{pending.length} Pending</span>

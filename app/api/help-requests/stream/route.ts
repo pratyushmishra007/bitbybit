@@ -53,11 +53,15 @@ export async function GET(request: NextRequest) {
         return;
       }
 
-      // Function to check for new help requests
+      // Function to check for new help requests with timeout
       const checkForUpdates = async () => {
         if (isClosed) return;
         
         try {
+          // Create an AbortController for timeout
+          const abortController = new AbortController();
+          const timeoutId = setTimeout(() => abortController.abort(), 5000); // 5 second timeout
+          
           let query = supabase
             .from("help_requests")
             .select(`
@@ -65,10 +69,13 @@ export async function GET(request: NextRequest) {
               student:student_id(id, name, email, avatar)
             `)
             .eq("status", "pending")
-            .order("created_at", { ascending: true });
+            .order("created_at", { ascending: true })
+            .limit(50);
 
           // Teachers and admins see all pending requests
           const { data: helpRequests, error } = await query;
+          
+          clearTimeout(timeoutId);
 
           if (error) {
             console.error("Error fetching help requests:", error);
@@ -109,8 +116,8 @@ export async function GET(request: NextRequest) {
       // Send initial data
       await checkForUpdates();
 
-      // Poll every 3 seconds for updates
-      intervalId = setInterval(checkForUpdates, 3000);
+      // Poll every 10 seconds for updates (reduced from 3s to lower load)
+      intervalId = setInterval(checkForUpdates, 10000);
 
       // Send heartbeat every 30 seconds to keep connection alive
       heartbeatId = setInterval(() => {

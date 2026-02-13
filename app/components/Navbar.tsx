@@ -52,18 +52,28 @@ export default function Navbar() {
             >
               Community
             </a>
+            {session && (
+              <a
+                href="/problems"
+                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
+              >
+                Problems
+              </a>
+            )}
             <a
               href="/contests"
               className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
             >
               Contests
             </a>
-            <a
-              href="/features"
-              className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-            >
-              Features
-            </a>
+            {session && (
+              <a
+                href="/leaderboard"
+                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
+              >
+                Leaderboard
+              </a>
+            )}
           </div>
 
           {/* Auth Buttons - Desktop */}
@@ -164,18 +174,28 @@ export default function Navbar() {
               >
                 Community
               </a>
+              {session && (
+                <a
+                  href="/problems"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors font-medium"
+                >
+                  Problems
+                </a>
+              )}
               <a
                 href="/contests"
                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors font-medium"
               >
                 Contests
               </a>
-              <a
-                href="/features"
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors font-medium"
-              >
-                Features
-              </a>
+              {session && (
+                <a
+                  href="/leaderboard"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors font-medium"
+                >
+                  Leaderboard
+                </a>
+              )}
               <a
                 href="/about"
                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors font-medium"

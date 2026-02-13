@@ -128,7 +128,8 @@ export async function GET(request: NextRequest) {
         *,
         student:student_id(id, name, email)
       `)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(100);
 
     // Filter by status
     if (status !== "all") {

@@ -1,15 +1,8 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-interface Organization {
-  id: string;
-  name: string;
-  code: string;
-}
+import { useOrg } from "@/contexts/OrgContext";
 
 interface Department {
   id: string;
@@ -31,15 +24,12 @@ interface Teacher {
 }
 
 export default function DepartmentsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
-  const [selectedOrg, setSelectedOrg] = useState<string>("");
   const [formData, setFormData] = useState({
     organization_id: "",
     name: "",
@@ -50,47 +40,17 @@ export default function DepartmentsPage() {
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
-    }
-
-    fetchOrganizations();
-  }, [session, status, router]);
-
-  useEffect(() => {
-    if (selectedOrg) {
-      fetchDepartments(selectedOrg);
-      fetchTeachers(selectedOrg);
+    if (selectedOrg?.id) {
+      fetchDepartments(selectedOrg.id);
+      fetchTeachers(selectedOrg.id);
+    } else {
+      setDepartments([]);
+      setTeachers([]);
     }
   }, [selectedOrg]);
 
-  const fetchOrganizations = async () => {
-    try {
-      const response = await fetch("/api/admin/organizations");
-      const data = await response.json();
-      
-      if (response.status === 403) {
-        router.push("/dashboard");
-        return;
-      }
-      
-      if (response.ok && data.organizations) {
-        setOrganizations(data.organizations);
-        if (data.organizations.length > 0) {
-          setSelectedOrg(data.organizations[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching organizations:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchDepartments = async (orgId: string) => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/admin/departments?organizationId=${orgId}`);
       const data = await response.json();
@@ -100,6 +60,8 @@ export default function DepartmentsPage() {
       }
     } catch (error) {
       console.error("Error fetching departments:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,6 +80,8 @@ export default function DepartmentsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrg?.id) return;
+    
     setLoading(true);
     setMessage(null);
 
@@ -131,7 +95,7 @@ export default function DepartmentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          organization_id: formData.organization_id || selectedOrg,
+          organization_id: formData.organization_id || selectedOrg.id,
         }),
       });
 
@@ -142,7 +106,7 @@ export default function DepartmentsPage() {
         setShowModal(false);
         setEditingDept(null);
         resetForm();
-        fetchDepartments(selectedOrg);
+        fetchDepartments(selectedOrg.id);
       } else {
         setMessage({ type: "error", text: data.error || "Failed to save department" });
       }
@@ -177,7 +141,7 @@ export default function DepartmentsPage() {
 
       if (response.ok) {
         setMessage({ type: "success", text: "Department deleted!" });
-        fetchDepartments(selectedOrg);
+        if (selectedOrg?.id) fetchDepartments(selectedOrg.id);
       } else {
         setMessage({ type: "error", text: data.error || "Failed to delete department" });
       }
@@ -196,27 +160,32 @@ export default function DepartmentsPage() {
     });
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900">
               Departments
             </h1>
-            <p className="text-gray-600 mt-2">Manage departments within organizations</p>
+            <p className="text-gray-600 mt-1">Manage departments for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => {
@@ -224,7 +193,7 @@ export default function DepartmentsPage() {
               setEditingDept(null);
               setShowModal(true);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
           >
             + Add Department
           </button>
@@ -236,22 +205,6 @@ export default function DepartmentsPage() {
             {message.text}
           </div>
         )}
-
-        {/* Organization Filter */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Organization</label>
-          <select
-            value={selectedOrg}
-            onChange={(e) => setSelectedOrg(e.target.value)}
-            className="w-full md:w-64 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name} ({org.code})
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* Departments List */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

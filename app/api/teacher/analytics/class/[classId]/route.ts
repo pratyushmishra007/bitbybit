@@ -375,6 +375,81 @@ export async function GET(
       ...data,
     }));
 
+    // Build lesson heatmap data (student × lesson progress matrix)
+    // Get all lessons from assigned courses for this class
+    const courseIds = classCourses?.map(cc => (cc.course as any)?.id).filter(Boolean) || [];
+    
+    let lessonsForHeatmap: { id: string; title: string; course_id: string; order: number }[] = [];
+    if (courseIds.length > 0) {
+      const { data: lessons } = await supabase
+        .from("lessons")
+        .select("id, title, course_id, order_index")
+        .in("course_id", courseIds)
+        .order("course_id")
+        .order("order_index");
+      lessonsForHeatmap = (lessons || []).map(l => ({
+        id: l.id,
+        title: l.title,
+        course_id: l.course_id,
+        order: l.order_index
+      }));
+    }
+
+    // Build the heatmap matrix
+    const lessonHeatmap = {
+      lessons: lessonsForHeatmap.slice(0, 20).map(l => ({ // Limit to 20 lessons for display
+        id: l.id,
+        title: l.title.length > 25 ? l.title.substring(0, 22) + "..." : l.title,
+        courseId: l.course_id
+      })),
+      students: (studentAnalytics || []).slice(0, 30).map(student => { // Limit to 30 students
+        if (!student) return null;
+        const studentLessonData = lessonProgress?.filter(lp => lp.user_id === student.id) || [];
+        return {
+          id: student.id,
+          name: student.name.length > 20 ? student.name.substring(0, 17) + "..." : student.name,
+          progress: lessonsForHeatmap.slice(0, 20).map(lesson => {
+            const lp = studentLessonData.find(slp => slp.lesson_id === lesson.id);
+            return {
+              lessonId: lesson.id,
+              completed: lp?.completed || false,
+              attempts: lp?.attempts_count || 0
+            };
+          })
+        };
+      }).filter(Boolean)
+    };
+
+    // Insights and analytics summary
+    const insights = {
+      mostStruggledLesson: lessonsForHeatmap.length > 0 ? (() => {
+        const lessonCompletionRates = lessonsForHeatmap.map(lesson => {
+          const completions = lessonProgress?.filter(lp => lp.lesson_id === lesson.id && lp.completed).length || 0;
+          const attempts = lessonProgress?.filter(lp => lp.lesson_id === lesson.id).length || 0;
+          return { lesson, completionRate: attempts > 0 ? completions / attempts * 100 : 100, attempts };
+        });
+        const struggled = lessonCompletionRates
+          .filter(l => l.attempts >= 3)
+          .sort((a, b) => a.completionRate - b.completionRate)[0];
+        return struggled ? { title: struggled.lesson.title, completionRate: Math.round(struggled.completionRate) } : null;
+      })() : null,
+      topPerformers: (studentAnalytics || [])
+        .filter(s => s)
+        .sort((a, b) => (b?.avgProgress || 0) - (a?.avgProgress || 0))
+        .slice(0, 3)
+        .map(s => ({ name: s!.name, progress: s!.avgProgress })),
+      needsAttention: (studentAnalytics || [])
+        .filter(s => s?.isAtRisk)
+        .map(s => ({ name: s!.name, reason: s!.riskReason, daysSinceActive: s!.daysSinceActive })),
+      weeklyTrend: (() => {
+        const firstHalf = activityHeatmap.slice(0, 3).reduce((sum, d) => sum + d.lessons, 0);
+        const secondHalf = activityHeatmap.slice(4).reduce((sum, d) => sum + d.lessons, 0);
+        if (secondHalf > firstHalf * 1.2) return "improving";
+        if (secondHalf < firstHalf * 0.8) return "declining";
+        return "stable";
+      })()
+    };
+
     // Calculate class summary metrics
     const totalStudents = studentAnalytics?.length || 0;
     const activeStudents = studentAnalytics?.filter(
@@ -423,6 +498,8 @@ export async function GET(
       students: studentAnalytics,
       courses: courseAnalytics,
       activityHeatmap,
+      lessonHeatmap,
+      insights,
     });
   } catch (error) {
     console.error("Error fetching class analytics:", error);

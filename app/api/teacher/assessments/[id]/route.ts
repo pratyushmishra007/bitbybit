@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createClient } from "@supabase/supabase-js";
+import { NotificationHelpers } from "@/lib/notifications";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -146,7 +147,7 @@ export async function PUT(
     // Check assessment exists and user has access
     const { data: existing } = await supabase
       .from("assessments")
-      .select("id, class_id, created_by")
+      .select("id, class_id, created_by, start_time, duration_minutes")
       .eq("id", id)
       .single();
 
@@ -179,13 +180,23 @@ export async function PUT(
     if (body.totalPoints !== undefined) updateData.total_points = body.totalPoints;
     if (body.passingScore !== undefined) updateData.passing_score = body.passingScore;
     if (body.startTime !== undefined) updateData.start_time = body.startTime;
-    if (body.endTime !== undefined) updateData.end_time = body.endTime;
     if (body.isTimed !== undefined) updateData.is_timed = body.isTimed;
     if (body.allowRetakes !== undefined) updateData.allow_retakes = body.allowRetakes;
     if (body.maxRetakes !== undefined) updateData.max_retakes = body.maxRetakes;
     if (body.shuffleQuestions !== undefined) updateData.shuffle_questions = body.shuffleQuestions;
     if (body.showResults !== undefined) updateData.show_results = body.showResults;
     if (body.isPublished !== undefined) updateData.is_published = body.isPublished;
+
+    // Calculate end_time from start_time + duration_minutes
+    const startTime = body.startTime !== undefined ? body.startTime : existing.start_time;
+    const durationMinutes = body.durationMinutes !== undefined ? body.durationMinutes : existing.duration_minutes;
+    
+    if (startTime && durationMinutes) {
+      const startDate = new Date(startTime);
+      updateData.end_time = new Date(startDate.getTime() + durationMinutes * 60 * 1000).toISOString();
+    } else if (!startTime) {
+      updateData.end_time = null;
+    }
 
     const { data: assessment, error } = await supabase
       .from("assessments")
@@ -197,6 +208,20 @@ export async function PUT(
     if (error) {
       console.error("Error updating assessment:", error);
       return NextResponse.json({ error: "Failed to update assessment" }, { status: 500 });
+    }
+
+    // Notify students when assessment is published
+    if (body.isPublished === true && existing.class_id) {
+      try {
+        await NotificationHelpers.assessmentPublished(
+          existing.class_id,
+          assessment.title,
+          assessment.type,
+          assessment.start_time
+        );
+      } catch (notifError) {
+        console.error("Failed to send assessment notification:", notifError);
+      }
     }
 
     return NextResponse.json({ assessment });

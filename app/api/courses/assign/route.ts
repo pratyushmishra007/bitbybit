@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { createClient } from '@supabase/supabase-js';
+import { NotificationHelpers } from '@/lib/notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -124,6 +125,15 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // The auto_enroll_students_in_class_course trigger will handle student enrollment
+
+    // Send notifications to students in the class
+    try {
+      const courseName = (classCourse as any)?.courses?.title || "New course";
+      await NotificationHelpers.courseAssigned(class_id, courseName, semester);
+    } catch (notifError) {
+      // Don't fail the request if notifications fail
+      console.error("Failed to send course assignment notifications:", notifError);
+    }
 
     return NextResponse.json(
       { classCourse, message: 'Course assigned successfully. Students have been auto-enrolled.' },

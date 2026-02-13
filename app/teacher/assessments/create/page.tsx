@@ -34,7 +34,6 @@ export default function CreateAssessmentPage() {
     totalPoints: 100,
     passingScore: 60,
     startTime: "",
-    endTime: "",
     isTimed: true,
     allowRetakes: false,
     maxRetakes: 1,
@@ -294,31 +293,25 @@ export default function CreateAssessmentPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Schedule (Optional)
             </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              End time will be calculated automatically: Start Time + Duration
+            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Start Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  End Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Start Time
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.startTime}
+                onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {formData.startTime && formData.durationMinutes > 0 && (
+                <p className="mt-2 text-sm text-gray-500">
+                  Ends at: {new Date(new Date(formData.startTime).getTime() + formData.durationMinutes * 60 * 1000).toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,9 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
+import { useOrg } from "@/contexts/OrgContext";
 
 interface User {
   id: string;
@@ -16,12 +14,6 @@ interface User {
   created_at: string;
 }
 
-interface Organization {
-  id: string;
-  name: string;
-  code: string;
-}
-
 interface Class {
   id: string;
   name: string;
@@ -29,53 +21,46 @@ interface Class {
 }
 
 export default function UsersPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"all" | "student" | "teacher" | "admin">("all");
   const [showBulkModal, setShowBulkModal] = useState(false);
-  const [bulkOrgId, setBulkOrgId] = useState("");
   const [bulkClassId, setBulkClassId] = useState("");
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
+    if (selectedOrg?.id) {
+      fetchUsers();
+      fetchClasses();
+    } else {
+      setUsers([]);
+      setClasses([]);
     }
+  }, [selectedOrg, filter]);
 
-    fetchData();
-  }, [session, status, router, filter]);
-
-  const fetchData = async () => {
+  const fetchUsers = async () => {
+    if (!selectedOrg?.id) return;
+    setLoading(true);
     try {
-      const [usersRes, orgsRes] = await Promise.all([
-        fetch(`/api/admin/users?role=${filter !== "all" ? filter : ""}`),
-        fetch("/api/admin/organizations"),
-      ]);
-
-      const [usersData, orgsData] = await Promise.all([
-        usersRes.json(),
-        orgsRes.json(),
-      ]);
-
-      if (usersRes.ok) setUsers(usersData.users || []);
-      if (orgsRes.ok) setOrganizations(orgsData.organizations || []);
+      let url = `/api/admin/users?organizationId=${selectedOrg.id}`;
+      if (filter !== "all") url += `&role=${filter}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      if (response.ok) setUsers(data.users || []);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchClasses = async (orgId: string) => {
+  const fetchClasses = async () => {
+    if (!selectedOrg?.id) return;
     try {
-      const response = await fetch(`/api/auth/classes?organizationId=${orgId}`);
+      const response = await fetch(`/api/auth/classes?organizationId=${selectedOrg.id}`);
       const data = await response.json();
       if (response.ok) {
         setClasses(data.classes || []);
@@ -89,14 +74,14 @@ export default function UsersPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!bulkOrgId || !bulkClassId) {
-      alert("Please select organization and class first");
+    if (!selectedOrg?.id || !bulkClassId) {
+      alert("Please select a class first");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("organizationId", bulkOrgId);
+    formData.append("organizationId", selectedOrg.id);
     formData.append("classId", bulkClassId);
 
     setLoading(true);
@@ -112,9 +97,8 @@ export default function UsersPage() {
       if (response.ok) {
         alert(`Successfully imported ${data.imported} users`);
         setShowBulkModal(false);
-        setBulkOrgId("");
         setBulkClassId("");
-        fetchData();
+        fetchUsers();
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -136,7 +120,7 @@ export default function UsersPage() {
       });
 
       if (response.ok) {
-        fetchData();
+        fetchUsers();
       }
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -153,25 +137,29 @@ export default function UsersPage() {
     a.click();
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Users
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+            <p className="text-gray-600 mt-1">Users for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => setShowBulkModal(true)}
@@ -277,25 +265,11 @@ export default function UsersPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization *
+                    Organization
                   </label>
-                  <select
-                    value={bulkOrgId}
-                    onChange={(e) => {
-                      setBulkOrgId(e.target.value);
-                      setBulkClassId("");
-                      if (e.target.value) fetchClasses(e.target.value);
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    required
-                  >
-                    <option value="">Select organization</option>
-                    {organizations.map((org) => (
-                      <option key={org.id} value={org.id}>
-                        {org.name} ({org.code})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedOrg.name} ({selectedOrg.code})
+                  </div>
                 </div>
 
                 <div>
@@ -306,7 +280,6 @@ export default function UsersPage() {
                     value={bulkClassId}
                     onChange={(e) => setBulkClassId(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    disabled={!bulkOrgId}
                     required
                   >
                     <option value="">Select class</option>
@@ -328,7 +301,7 @@ export default function UsersPage() {
                     accept=".csv"
                     onChange={handleBulkUpload}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                    disabled={!bulkOrgId || !bulkClassId}
+                    disabled={!bulkClassId}
                   />
                 </div>
               </div>
@@ -338,7 +311,6 @@ export default function UsersPage() {
                   type="button"
                   onClick={() => {
                     setShowBulkModal(false);
-                    setBulkOrgId("");
                     setBulkClassId("");
                   }}
                   className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

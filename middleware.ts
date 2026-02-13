@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/profile") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/teacher") ||
+    pathname.startsWith("/org-admin") ||
     pathname.startsWith("/contests");
 
   // Check account status and redirect pending users
@@ -48,5 +49,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/admin/:path*", "/teacher/:path*", "/contests/:path*", "/auth/:path*", "/pending-approval"],
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/admin/:path*", "/teacher/:path*", "/org-admin/:path*", "/contests/:path*", "/auth/:path*", "/pending-approval"],
 };

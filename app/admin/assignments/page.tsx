@@ -1,9 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useOrg } from "@/contexts/OrgContext";
 
 interface Teacher {
   id: string;
@@ -27,12 +25,11 @@ interface Assignment {
 }
 
 export default function AssignmentsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { selectedOrg, loadingOrgs } = useOrg();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     teacher_id: "",
@@ -41,22 +38,24 @@ export default function AssignmentsPage() {
   });
 
   useEffect(() => {
-    if (status === "loading") return;
-    
-    if (!session?.user) {
-      router.push("/auth/signin");
-      return;
+    if (selectedOrg?.id) {
+      fetchData();
+    } else {
+      setAssignments([]);
+      setTeachers([]);
+      setClasses([]);
     }
-
-    fetchData();
-  }, [session, status, router]);
+  }, [selectedOrg]);
 
   const fetchData = async () => {
+    if (!selectedOrg?.id) return;
+    
+    setLoading(true);
     try {
       const [assignmentsRes, teachersRes, classesRes] = await Promise.all([
-        fetch("/api/admin/assignments"),
-        fetch("/api/admin/users?role=teacher"),
-        fetch("/api/admin/classes"),
+        fetch(`/api/admin/assignments?organizationId=${selectedOrg.id}`),
+        fetch(`/api/admin/users?role=teacher&organizationId=${selectedOrg.id}`),
+        fetch(`/api/admin/classes?organizationId=${selectedOrg.id}`),
       ]);
 
       const [assignmentsData, teachersData, classesData] = await Promise.all([
@@ -77,13 +76,18 @@ export default function AssignmentsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrg?.id) return;
+    
     setLoading(true);
 
     try {
       const response = await fetch("/api/admin/assignments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          organization_id: selectedOrg.id,
+        }),
       });
 
       if (response.ok) {
@@ -114,29 +118,35 @@ export default function AssignmentsPage() {
     }
   };
 
-  if (status === "loading" || loading) {
+  if (loadingOrgs || loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
+  if (!selectedOrg) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-600">Please select an organization from the header.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/admin" className="text-indigo-600 hover:text-indigo-700 mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-4xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900">
               Teacher Assignments
             </h1>
+            <p className="text-gray-600 mt-1">Assignments for {selectedOrg.name}</p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="px-6 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-lg"
+            className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
           >
             + Assign Teacher
           </button>
@@ -144,7 +154,7 @@ export default function AssignmentsPage() {
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <table className="w-full">
-            <thead className="bg-linear-to-r from-indigo-50 to-purple-50">
+            <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Teacher</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>

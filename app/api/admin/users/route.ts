@@ -8,41 +8,59 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// GET: List all users with optional role filter
+// Helper to check admin access (admin or org_admin)
+async function checkAdminAccess(session: any, organizationId?: string) {
+  let userRole = (session.user as any).role;
+  let userOrgId = (session.user as any).organizationId || (session.user as any).organization_id;
+
+  if (!userRole) {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role, organization_id")
+      .eq("id", session.user.id)
+      .single();
+
+    userRole = userData?.role;
+    userOrgId = userData?.organization_id;
+  }
+
+  // Platform admin can access all
+  if (userRole === "admin" || userRole === "platform_admin") {
+    return { allowed: true, role: userRole, isGlobalAdmin: true };
+  }
+
+  // Org admin can only access their organization
+  if (userRole === "org_admin" || userRole === "hod") {
+    if (organizationId && organizationId !== userOrgId) {
+      return { allowed: false, role: userRole };
+    }
+    return { allowed: true, role: userRole, orgId: userOrgId, isGlobalAdmin: false };
+  }
+
+  return { allowed: false, role: userRole };
+}
+
+// GET: List all users with optional filters
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-
-    console.log("🔍 Session in /api/admin/users:", {
-      hasSession: !!session,
-      user: session?.user,
-      role: (session?.user as any)?.role,
-    });
 
     if (!session?.user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Check role from session OR fetch from database
-    let userRole = (session.user as any).role;
-    
-    if (!userRole) {
-      console.log("⚠️ Role not in session, fetching from database...");
-      const { data: userData } = await supabase
-        .from("users")
-        .select("role")
-        .eq("email", session.user.email)
-        .single();
-      
-      userRole = userData?.role;
-      console.log("📊 Fetched role from DB:", userRole);
-    }
+    const organizationId = req.nextUrl.searchParams.get("organizationId");
+    const access = await checkAdminAccess(session, organizationId || undefined);
 
-    if (userRole !== "admin") {
+    if (!access.allowed) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
     const role = req.nextUrl.searchParams.get("role");
+    const unassigned = req.nextUrl.searchParams.get("unassigned") === "true";
+
+    // Determine target organization
+    const targetOrgId = organizationId || access.orgId;
 
     let query = supabase
       .from("users")
@@ -52,6 +70,13 @@ export async function GET(req: NextRequest) {
         class:classes(id, name, code)
       `)
       .order("created_at", { ascending: false });
+
+    // Filter by organization if org_admin or if org filter specified
+    if (targetOrgId && !access.isGlobalAdmin) {
+      query = query.eq("organization_id", targetOrgId);
+    } else if (organizationId) {
+      query = query.eq("organization_id", organizationId);
+    }
 
     if (role) {
       query = query.eq("role", role);
@@ -67,7 +92,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ users: users || [] });
+    // If unassigned filter is requested, filter out students who have active registrations
+    let filteredUsers = users || [];
+    if (unassigned && role === "student") {
+      const { data: registrations } = await supabase
+        .from("student_registrations")
+        .select("student_id")
+        .eq("status", "active");
+
+      const registeredIds = new Set((registrations || []).map(r => r.student_id));
+      filteredUsers = filteredUsers.filter(u => !registeredIds.has(u.id));
+    }
+
+    return NextResponse.json({ users: filteredUsers, success: true });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(

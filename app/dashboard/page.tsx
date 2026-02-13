@@ -446,6 +446,77 @@ export default function DashboardPage() {
 
           {/* Quick Actions */}
           <div className="mt-10 pt-8 border-t border-gray-200">
+            <h3 className="text-2xl font-black text-gray-800 mb-6">Practice & Compete</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Link
+                href="/problems"
+                className="group relative bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-xl hover:shadow-indigo-500/20 hover:-translate-y-1 transform overflow-hidden"
+              >
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-indigo-400 to-purple-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
+                    <span className="text-3xl">💻</span>
+                  </div>
+                  <h4 className="text-xl font-black text-gray-800 mb-2">Problems</h4>
+                  <p className="text-sm text-gray-600 font-medium mb-3">Practice DSA & coding problems</p>
+                  <span className="text-indigo-600 text-sm font-bold group-hover:text-indigo-700 inline-flex items-center gap-1">
+                    Solve →
+                  </span>
+                </div>
+              </Link>
+
+              <Link
+                href="/daily-challenge"
+                className="group relative bg-linear-to-br from-orange-50 to-amber-50 rounded-2xl p-8 border border-orange-200 hover:border-orange-300 transition-all hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 transform overflow-hidden"
+              >
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-orange-400 to-amber-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
+                    <span className="text-3xl">🔥</span>
+                  </div>
+                  <h4 className="text-xl font-black text-gray-800 mb-2">Daily Challenge</h4>
+                  <p className="text-sm text-gray-600 font-medium mb-3">Solve today's problem for bonus XP</p>
+                  <span className="text-orange-600 text-sm font-bold group-hover:text-orange-700 inline-flex items-center gap-1">
+                    Start →
+                  </span>
+                </div>
+              </Link>
+
+              <Link
+                href="/leaderboard"
+                className="group relative bg-linear-to-br from-yellow-50 to-amber-50 rounded-2xl p-8 border border-yellow-200 hover:border-yellow-300 transition-all hover:shadow-xl hover:shadow-yellow-500/20 hover:-translate-y-1 transform overflow-hidden"
+              >
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-yellow-400 to-amber-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-yellow-500 to-amber-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
+                    <span className="text-3xl">🏅</span>
+                  </div>
+                  <h4 className="text-xl font-black text-gray-800 mb-2">Leaderboard</h4>
+                  <p className="text-sm text-gray-600 font-medium mb-3">See top performers & your rank</p>
+                  <span className="text-yellow-600 text-sm font-bold group-hover:text-yellow-700 inline-flex items-center gap-1">
+                    View →
+                  </span>
+                </div>
+              </Link>
+
+              <Link
+                href="/contests"
+                className="group relative bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-200 hover:border-blue-300 transition-all hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transform overflow-hidden"
+              >
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-blue-400 to-cyan-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
+                    <span className="text-3xl">🏆</span>
+                  </div>
+                  <h4 className="text-xl font-black text-gray-800 mb-2">Contests</h4>
+                  <p className="text-sm text-gray-600 font-medium mb-3">Compete in timed challenges</p>
+                  <span className="text-blue-600 text-sm font-bold group-hover:text-blue-700 inline-flex items-center gap-1">
+                    Compete →
+                  </span>
+                </div>
+              </Link>
+            </div>
+
             <h3 className="text-2xl font-black text-gray-800 mb-6">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Link
@@ -461,23 +532,6 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600 font-medium mb-3">Share code and learn from others</p>
                   <span className="text-purple-600 text-sm font-bold group-hover:text-purple-700 inline-flex items-center gap-1">
                     Explore →
-                  </span>
-                </div>
-              </Link>
-
-              <Link
-                href="/contests"
-                className="group relative bg-linear-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-200 hover:border-blue-300 transition-all hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transform overflow-hidden"
-              >
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-linear-to-br from-blue-400 to-cyan-400 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all">
-                    <span className="text-3xl">🏆</span>
-                  </div>
-                  <h4 className="text-xl font-black text-gray-800 mb-2">Contests</h4>
-                  <p className="text-sm text-gray-600 font-medium mb-3">Test your skills in challenges</p>
-                  <span className="text-blue-600 text-sm font-bold group-hover:text-blue-700 inline-flex items-center gap-1">
-                    Compete →
                   </span>
                 </div>
               </Link>

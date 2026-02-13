@@ -32,6 +32,19 @@ export default function MyAssessmentsPage() {
   const [loading, setLoading] = useState(true);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
+  const [, setTick] = useState(0); // Force re-render for countdown
+
+  // Timer effect to update countdowns every second
+  useEffect(() => {
+    const hasScheduled = assessments.some(a => a.startTime && new Date(a.startTime) > new Date());
+    if (!hasScheduled) return;
+    
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [assessments]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -113,7 +126,31 @@ export default function MyAssessmentsPage() {
     return "ongoing";
   };
 
-  const getStatusBadge = (status: AssessmentStatus) => {
+  // Format countdown time
+  const formatCountdown = (targetDate: Date): string => {
+    const now = new Date();
+    const diff = targetDate.getTime() - now.getTime();
+    
+    if (diff <= 0) return "Starting now!";
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  };
+
+  const getStatusBadge = (status: AssessmentStatus, assessment?: Assessment) => {
     switch (status) {
       case "ongoing":
         return (
@@ -124,8 +161,13 @@ export default function MyAssessmentsPage() {
         );
       case "scheduled":
         return (
-          <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-            ⏰ Scheduled
+          <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 flex items-center gap-1">
+            <span className="animate-pulse">⏰</span>
+            {assessment?.startTime ? (
+              <>Starts in {formatCountdown(new Date(assessment.startTime))}</>
+            ) : (
+              "Scheduled"
+            )}
           </span>
         );
       case "ended":
@@ -246,7 +288,7 @@ export default function MyAssessmentsPage() {
                           <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 capitalize">
                             {assessment.type}
                           </span>
-                          {getStatusBadge(status)}
+                          {getStatusBadge(status, assessment)}
                           {completed && (
                             <span
                               className={`px-2 py-0.5 text-xs rounded-full ${
