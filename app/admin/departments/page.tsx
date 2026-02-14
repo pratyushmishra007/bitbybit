@@ -297,18 +297,14 @@ export default function DepartmentsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Organization
                 </label>
-                <select
-                  value={formData.organization_id || selectedOrg?.id || ""}
-                  onChange={(e) => setFormData({ ...formData, organization_id: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={selectedOrg?.name || ""}
+                  className="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 cursor-not-allowed"
+                  disabled
+                  readOnly
+                />
+                <input type="hidden" value={selectedOrg?.id || ""} />
               </div>
 
               <div>
