@@ -298,7 +298,7 @@ export default function DepartmentsPage() {
                   Organization
                 </label>
                 <select
-                  value={formData.organization_id || selectedOrg}
+                  value={formData.organization_id || selectedOrg?.id || ""}
                   onChange={(e) => setFormData({ ...formData, organization_id: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500"
                   required
