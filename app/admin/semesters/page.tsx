@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useOrg } from "@/contexts/OrgContext";
 
 interface AcademicYear {

@@ -216,8 +216,7 @@ export async function PUT(
         await NotificationHelpers.assessmentPublished(
           existing.class_id,
           assessment.title,
-          assessment.type,
-          assessment.start_time
+          assessment.id
         );
       } catch (notifError) {
         console.error("Failed to send assessment notification:", notifError);

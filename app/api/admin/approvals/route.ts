@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdminAccess, checkTeacherAccess } from "@/lib/auth-helpers";
 import { createClient } from "@supabase/supabase-js";
+import { NotificationHelpers } from "@/lib/notifications";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

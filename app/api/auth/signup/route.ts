@@ -142,13 +142,14 @@ export async function POST(req: NextRequest) {
 
         // Update batch student count
         if (batchData) {
-          await supabase
-            .from("student_batches")
-            .update({ total_students: (batchData as any).total_students + 1 || 1 })
-            .eq("id", batchId)
-            .catch(err => {
-              console.warn("Could not update batch student count:", err);
-            });
+          try {
+            await supabase
+              .from("student_batches")
+              .update({ total_students: (batchData as any).total_students + 1 || 1 })
+              .eq("id", batchId);
+          } catch (err) {
+            console.warn("Could not update batch student count:", err);
+          }
         }
 
         return NextResponse.json({
@@ -292,11 +293,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize user problem stats for global platform
-    await supabase.from("user_problem_stats").insert({
-      user_id: user.id,
-    }).catch(err => {
+    try {
+      await supabase.from("user_problem_stats").insert({
+        user_id: user.id,
+      });
+    } catch (err) {
       console.warn("Could not create user_problem_stats:", err);
-    });
+    }
 
     return NextResponse.json({
       success: true,
