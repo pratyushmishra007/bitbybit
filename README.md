@@ -96,7 +96,7 @@ Run the migration in Supabase SQL Editor:
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+Visit [http://localhost:3000]()
 
 ## 📚 Project Structure
 
